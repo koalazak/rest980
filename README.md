@@ -12,7 +12,7 @@ $ npm install
 
 ## Config
 
-Edit `config.default.json` file to put your blid and password.
+Edit `config/default.json` file to put your blid and password.
 
 And if you know your robot IP address complete `robotIP` field (optional) just to speed up the startup.
 ```
