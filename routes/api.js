@@ -16,6 +16,8 @@ router.get('/status/mission', function (req, res, next) {
 });
 */
 
+// LOCAL:
+
 router.get('/local/action/start', map2dorita('local', 'start'));
 router.get('/local/action/stop', map2dorita('local', 'stop'));
 router.get('/local/action/pause', map2dorita('local', 'pause'));
@@ -24,12 +26,14 @@ router.get('/local/action/resume', map2dorita('local', 'resume'));
 
 router.get('/local/config/time', map2dorita('local', 'getTime'));
 router.post('/local/config/time', map2dorita('local', 'setTime', true));
+
 router.post('/local/config/ptime', map2dorita('local', 'setPtime', true));
 
 router.get('/local/config/langs', map2dorita('local', 'getLangs'));
 router.get('/local/config/bbrun', map2dorita('local', 'getBbrun'));
-router.get('/local/config/week', map2dorita('local', 'getWeek'));
 router.get('/local/config/cloud', map2dorita('local', 'getCloudConfig'));
+
+router.get('/local/config/week', map2dorita('local', 'getWeek'));
 router.post('/local/config/week', map2dorita('local', 'setWeek', true));
 
 router.post('/local/config/carpetBoost/auto', map2dorita('local', 'setCarpetBoostAuto'));
@@ -55,14 +59,34 @@ router.get('/local/info/lastwireless', map2dorita('local', 'getWirelessLastStatu
 router.get('/local/info/mission', map2dorita('local', 'getMission'));
 router.get('/local/info/sys', map2dorita('local', 'getSys'));
 
-// TODO Cloud routes.
+// CLOUD:
+
+router.get('/cloud/info/status', map2dorita('cloud', 'getStatus'));
+router.get('/cloud/info/history', map2dorita('cloud', 'accumulatedHistorical'));
+router.get('/cloud/info/missionHistory', map2dorita('cloud', 'missionHistory'));
+
+router.get('/cloud/action/clean', map2dorita('cloud', 'clean'));
+router.get('/cloud/action/quick', map2dorita('cloud', 'quick'));
+router.get('/cloud/action/spot', map2dorita('cloud', 'spot'));
+router.get('/cloud/action/dock', map2dorita('cloud', 'dock'));
+router.get('/cloud/action/start', map2dorita('cloud', 'start'));
+router.get('/cloud/action/stop', map2dorita('cloud', 'stop'));
+router.get('/cloud/action/pause', map2dorita('cloud', 'pause'));
+router.get('/cloud/action/resume', map2dorita('cloud', 'resume'));
+router.get('/cloud/action/wake', map2dorita('cloud', 'wake'));
+router.get('/cloud/action/reset', map2dorita('cloud', 'reset'));
+router.get('/cloud/action/find', map2dorita('cloud', 'find'));
+router.get('/cloud/action/wipe', map2dorita('cloud', 'wipe'));
+router.get('/cloud/action/sleep', map2dorita('cloud', 'sleep'));
+router.get('/cloud/action/off', map2dorita('cloud', 'off'));
+router.get('/cloud/action/fbeep', map2dorita('cloud', 'fbeep'));
 
 function map2dorita (source, method, hasArgs) {
   return function (req, res, next) {
     if (hasArgs) {
-      if (!req.body.args) return next('Invalid arguments.');
+      if (!req.body) return next('Invalid arguments.');
     }
-    req.dorita980[source][method](hasArgs ? req.body.args : undefined).then(function (resp) {
+    req.dorita980[source][method](hasArgs ? req.body : undefined).then(function (resp) {
       res.send(resp);
     }).catch(next);
   };

@@ -11,12 +11,15 @@ if (!config.blid || !config.password) {
 }
 
 var myRobotLocal;
+var myRobotCloud;
 if (config.robotIP) {
   myRobotLocal = new dorita980.Local(config.blid, config.password, config.robotIP);
+  myRobotCloud = new dorita980.Cloud(config.blid, config.password, config.robotIP);
 } else {
   dorita980.getRobotIP(function (e, ip) {
     if (e) throw e;
     myRobotLocal = new dorita980.Local(config.blid, config.password, ip);
+    myRobotCloud = new dorita980.Cloud(config.blid, config.password, ip);
   });
 }
 
@@ -33,7 +36,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(function (req, res, next) {
   req.dorita980 = {
-    local: myRobotLocal
+    local: myRobotLocal,
+    cloud: myRobotCloud
   };
   next();
 });

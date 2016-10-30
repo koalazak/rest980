@@ -1,7 +1,7 @@
 #rest980
-[dorita980](https://github.com/koalazak/dorita980) REST interface to control your iRobot Roomba 980 via local server on your lan.
+rest980 create a http server to map all [dorita980](https://github.com/koalazak/dorita980) methods in a REST API to control your iRobot Roomba 980.
 
-See [dorita980](https://github.com/koalazak/dorita980) for more information and instructions to get your blid and password.
+See [dorita980](https://github.com/koalazak/dorita980) for more information and instructions about how to get your robot blid and password.
 
 ## Install
 ```bash
@@ -12,7 +12,7 @@ $ npm install
 
 ## Config
 
-Edit `config/default.json` file to put your blid and password.
+Edit `config/default.json` file to set your `blid` and `password`.
 
 And if you know your robot IP address complete `robotIP` field (optional) just to speed up the startup.
 ```
@@ -24,7 +24,7 @@ And if you know your robot IP address complete `robotIP` field (optional) just t
 }
 ```
 
-## Run
+## Start API Server
 ```
 $ cd rest980
 $ DEBUG=rest980:* npm start
@@ -33,37 +33,57 @@ rest980:server Listening on port 3000
 
 omit `DEBUG=rest980:*` if you want. You can just run with `npm start`
 
-## API
+## API documentation
 
-Now you can make request to this server.
+Now you can make request to this server on port 3000.
+There are 2 main endpoints: `local` and `cloud`, mapped to [dorita980](https://github.com/koalazak/dorita980) local and cloud methods as well.
+
+## Error responses:
+```
+{"message":"human message","error":{}}
+```
+
+## Local
 
 ### Actions
 
-#### start
-```http
-GET http://[ip]/local/action/start
-```
-Response:
-```
-{"ok":null,"id":23}
-```
+All cleaning actions are under `/api/local/action/[action]` endpoint using GET method  without query params:
 
-#### stop
+Available actions:
+
+- start
+- stop
+- pause
+- dock
+- resume
+
+Example: start to clean
+
 ```http
-GET http://[ip]/local/action/stop
+GET http://192.168.1.110:3000/api/local/action/start
 ```
-Response:
+Success Response:
 ```
 {"ok":null,"id":23}
 ```
 
 ### Info
 
-#### mission
+All info endpoints are under `/api/local/info/[record]` using GET method without query params:
+
+Available records:
+
+- mission
+- wireless
+- lastwireless
+- sys
+- sku
+
+Example: get current mission variables
 ```http
-GET http://[ip]/local/info/mission
+GET http://192.168.1.110:3000/api/local/info/mission
 ```
-Response:
+Success Response:
 ```
 { "ok":
    { "flags": 0,
@@ -80,30 +100,124 @@ Response:
   "id": 2 }
 ```
 
-### Config
+### Configurations
 
-#### week
-Get week configuration
+All configuration endpoints are under `/api/local/config/[configName]` using `GET` method to get current configuration and `POST` method to set a new configuration.
+
+Available configName:
+
+- ptime (only GET)
+- bbrun (only GET)
+- cloud (only GET)
+- langs (only GET. Use `preferences` to set lang)
+- week
+- time
+- preferences
+- carpetBoost/auto (only POST. Use `preferences` to get current config)
+- carpetBoost/performance (only POST. Use `preferences` to get current config)
+- carpetBoost/eco (only POST. Use `preferences` to get current config)
+- edgeClean/on (only POST. Use `preferences` to get current config)
+- edgeClean/off (only POST. Use `preferences` to get current config)
+- cleaningPasses/auto (only POST. Use `preferences` to get current config)
+- cleaningPasses/one (only POST. Use `preferences` to get current config)
+- cleaningPasses/two (only POST. Use `preferences` to get current config)
+- alwaysFinish/on (only POST. Use `preferences` to get current config)
+- alwaysFinish/off (only POST. Use `preferences` to get current config)
+
+See [dorita980](https://github.com/koalazak/dorita980) documentation for responses and body params for each method.
+
+### Examples:
+
+#### Get preferences:
 ```http
-GET http://[ip]/local/config/week
+GET http://192.168.1.110:3000/api/local/config/preferences
 ```
-Response:
-```
-{ "ok":
-   { "cycle": [ "start", "none", "start", "start", "start", "start", "start" ],
-     "h": [ 10, 10, 10, 10, 10, 10, 10 ],
-     "m": [ 30, 30, 30, 30, 30, 30, 30 ] },
-  "id": 2 }
+Success Response:
+```javascript
+{ ok:
+   { flags: 1024, // See Cleaning Preferences table in dorita980 documentation.
+     lang: 2,
+     timezone: 'America/Buenos_Aires',
+     name: 'myRobotName',
+     cleaningPreferences: {
+        carpetBoost: 'auto', // 'auto', 'performance', 'eco'
+        edgeClean: true,
+        cleaningPasses: '1', // '1', '2', 'auto'
+        alwaysFinish: true 
+      }
+    },
+ id: 2 }
 ```
 
-Set week configuration
+#### Set preferences:
 ```http
-POST http://[ip]/local/config/week
-{"cycle":["none","start","start","start","start","start","start"],"h":[10,10,10,10,10,10,10],"m":[30,30,30,30,30,30,30]}
+POST http://192.168.1.110:3000/api/local/config/preferences
 ```
-Response:
+Body:
 ```
-{"ok":null,"id":23}
+{ 
+  "flags": 1107, // See Cleaning Preferences table in dorita980 documentation.
+  "lang": 2,
+  "timezone": "America/Buenos_Aires",
+  "name": "myRobotName"
+}
 ```
 
-Full Documentation pending...
+Success Response:
+```
+{"ok":null,"id":293}
+```
+
+#### Set cleaning passes to two:
+```http
+POST http://192.168.1.110:3000/api/local/config/cleaningPasses/two
+```
+Body:
+```
+{}
+```
+
+Success Response:
+```
+{"ok":null,"id":293}
+```
+
+## Cloud
+
+Use `GET` in all `info` endpoints without query params:
+
+- /api/cloud/info/status
+- /api/cloud/info/history
+- /api/cloud/info/missionHistory
+
+Use `GET ` in all `action` endpoints without query params:
+
+- /api/cloud/action/clean
+- /api/cloud/action/quick
+- /api/cloud/action/spot
+- /api/cloud/action/dock
+- /api/cloud/action/start
+- /api/cloud/action/stop
+- /api/cloud/action/pause
+- /api/cloud/action/resume
+- /api/cloud/action/wake
+- /api/cloud/action/reset
+- /api/cloud/action/find
+- /api/cloud/action/wipe
+- /api/cloud/action/sleep
+- /api/cloud/action/off
+- /api/cloud/action/fbeep
+
+Example:
+
+```http
+GET http://192.168.1.110:3000/api/cloud/action/clean
+```
+Success Response:
+```
+{"status":"OK","method":"multipleFieldSet"}
+```
+
+## Host images or files
+
+You can add images or files to `public/` folder to serve static files.
