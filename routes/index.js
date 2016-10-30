@@ -5,12 +5,12 @@ var helloResponse = {
   documentation: 'https://github.com/koalazak/rest980'
 };
 
-router.get('/', function (req, res, next) {
+router.get('/', function (req, res) {
   helloResponse.pong = new Date();
   res.send(helloResponse);
 });
 
-router.get('/ping', function (req, res, next) {
+router.get('/ping', function (req, res) {
   helloResponse.pong = new Date();
   res.send(helloResponse);
 });

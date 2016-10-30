@@ -39,6 +39,7 @@ Now you can make request to this server on port 3000.
 There are 2 main endpoints: `local` and `cloud`, mapped to [dorita980](https://github.com/koalazak/dorita980) local and cloud methods as well.
 
 ## Error responses:
+HTTP status 500 and response:
 ```
 {"message":"human message","error":{}}
 ```

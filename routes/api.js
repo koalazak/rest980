@@ -1,16 +1,31 @@
 var express = require('express');
 var router = express.Router();
+var config = require('config');
+var dorita980 = require('dorita980');
 
-router.get('/', function (req, res, next) {
+if (!config.blid || !config.password) {
+  throw new Error('Please edit config/default.json file with your robot credentials.');
+}
+
+var myRobot = {};
+
+var handleIP = config.robotIP ? function (cb) { cb(null, config.robotIP); } : dorita980.getRobotIP;
+handleIP(function (e, ip) {
+  if (e) throw e;
+  myRobot.local = new dorita980.Local(config.blid, config.password, ip);
+  myRobot.cloud = new dorita980.Cloud(config.blid, config.password, ip);
+});
+
+router.get('/', function (req, res) {
   res.send({
     version: '1.0'}
   );
 });
 
 /*
-// as example if you need to handle special things in request...
+// as example if you need to handle special things in a request...
 router.get('/status/mission', function (req, res, next) {
-  req.dorita980.local.getMission().then(function (resp) {
+  myRobot.local.getMission().then(function (resp) {
     res.send(resp);
   }).catch(next);
 });
@@ -81,12 +96,16 @@ router.get('/cloud/action/sleep', map2dorita('cloud', 'sleep'));
 router.get('/cloud/action/off', map2dorita('cloud', 'off'));
 router.get('/cloud/action/fbeep', map2dorita('cloud', 'fbeep'));
 
+// helper:
+
 function map2dorita (source, method, hasArgs) {
   return function (req, res, next) {
+    if (!myRobot.local || !myRobot.cloud) return next(new Error('Connection with robot not ready.'));
+
     if (hasArgs) {
       if (!req.body) return next('Invalid arguments.');
     }
-    req.dorita980[source][method](hasArgs ? req.body : undefined).then(function (resp) {
+    myRobot[source][method](hasArgs ? req.body : undefined).then(function (resp) {
       res.send(resp);
     }).catch(next);
   };

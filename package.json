@@ -4,7 +4,10 @@
   "description": "dorita980 REST interface to control your iRobot Roomba 980",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www"
+    "start": "node ./bin/www",
+    "pretest": "npm install",
+    "check:style": "eslint .",
+    "test": "npm run check:style"
   },
   "repository": {
     "type": "git",
@@ -15,9 +18,17 @@
     "config": "^1.21.0",
     "cookie-parser": "~1.4.3",
     "debug": "~2.2.0",
-    "dorita980": "^2.4.5",
-    "express": "~4.13.4",
+    "dorita980": "^2.4.6",
+    "express": "~4.14.0",
     "morgan": "~1.7.0"
+  },
+  "devDependencies": {
+    "semistandard": "^9.1.0",
+    "eslint": "^3.8.0",
+    "eslint-config-standard": "^6.2.0",
+    "eslint-config-semistandard": "^7.0.0",
+    "eslint-plugin-promise": "^3.0.0",
+    "eslint-plugin-standard": "^2.0.1"
   },
   "keywords": [
     "unofficial",
