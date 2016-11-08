@@ -8,7 +8,7 @@ var password = process.env.PASSWORD || config.password;
 var robotIP = process.env.ROBOT_IP || config.robotIP;
 
 if (!blid || !password) {
-  throw new Error('Please edit config/default.json file with your robot credentials.');
+  throw new Error('Config not found. Please edit config/default.json file with your robot credentials. Or set BLID, PASSWORD and ROBOT_IP enviroment variables.');
 }
 
 var myRobot = {};
