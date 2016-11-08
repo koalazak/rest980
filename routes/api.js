@@ -3,17 +3,21 @@ var router = express.Router();
 var config = require('config');
 var dorita980 = require('dorita980');
 
-if (!config.blid || !config.password) {
+var blid = process.env.BLID || config.blid;
+var password = process.env.PASSWORD || config.password;
+var robotIP = process.env.ROBOT_IP || config.robotIP;
+
+if (!blid || !password) {
   throw new Error('Please edit config/default.json file with your robot credentials.');
 }
 
 var myRobot = {};
 
-var handleIP = config.robotIP ? function (cb) { cb(null, config.robotIP); } : dorita980.getRobotIP;
+var handleIP = robotIP ? function (cb) { cb(null, robotIP); } : dorita980.getRobotIP;
 handleIP(function (e, ip) {
   if (e) throw e;
-  myRobot.local = new dorita980.Local(config.blid, config.password, ip);
-  myRobot.cloud = new dorita980.Cloud(config.blid, config.password, ip);
+  myRobot.local = new dorita980.Local(blid, password, ip);
+  myRobot.cloud = new dorita980.Cloud(blid, password, ip);
 });
 
 router.get('/', function (req, res) {
