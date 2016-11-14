@@ -36,6 +36,20 @@ rest980:server Listening on port 3000
 
 omit `DEBUG=rest980:*` if you want. You can just run with `npm start`
 
+## Or use Docker Image
+
+You can use [koalazak/rest980](https://hub.docker.com/r/koalazak/rest980/) docker image to run this server in a docker container. Usefull to run on [Synology](https://www.synology.com/en-global/) for example.
+
+Pull Docker image:
+```bash
+docker pull koalazak/rest980
+```
+
+Run Docker image:
+```
+docker run -e BLID=myuser -e PASSWORD=mypass -e ROBOT_IP=myrobotIP koalazak/rest980
+```
+
 ## API documentation
 
 Now you can make request to this server on port 3000.
