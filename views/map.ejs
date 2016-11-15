@@ -1,0 +1,47 @@
+<% include header.ejs %>
+
+<div>
+  <button type="button" class='btn btn-success action' data-action='/api/local/action/start'>Start</button>
+  <button type="button" class='btn btn-success action' data-action='/api/local/action/pause'>Pause</button>
+  <button type="button" class='btn btn-success action' data-action='/api/local/action/resume'>Resume</button>
+  <button type="button" class='btn btn-success action' data-action='/api/local/action/dock'>Dock</button>
+  <button type="button" class='btn btn-success action' data-action='/api/local/action/stop'>Stop</button>
+  <button type="button" class='btn btn-info action' data-action='/api/local/info/sys'>Test Sys</button>
+  <a type="button" class='btn btn-warning' id='download' onclick='downloadCanvas();'>Download Image</a>
+  <button type="button" class='btn btn-danger' onclick='clearMap();'>Clear map</button>
+  <button type="button" class='btn btn-danger' onclick='toggleMapping();'>Start/Stop mapping</button> <span class='' id='mapStatus'></span>
+  <div>
+    Update every: <input type='text' id='updateevery' size='5' value=''/>ms.
+    Canvas size: w:<input type='text' class='metrics' id='sizew' size='5' value=''/> h:<input class='metrics' type='text' id='sizeh' size='5' value=''/>
+    Offsets: x:<input type='text' class='metrics' id='offsetx' size='5' value=''/> y:<input class='metrics' type='text' id='offsety' size='5' value=''/>
+  </div>
+
+  <div>Command response: <div id='apiresponse'>ok</div></div>
+
+  <div style="position: relative;">
+    <canvas id="path_layer"  style="position: absolute; left: 0; top: 0; z-index: 0; border:1px solid #d3d3d3;"></canvas>
+    <canvas id="robot_body_layer" style="position: absolute; left: 0; top: 0; z-index: 1; border:1px solid #d3d3d3;"></canvas>
+    <canvas id="text_layer" style="position: absolute; left: 0; top: 0; z-index: 2; border:1px solid #d3d3d3;"></canvas>
+  </div>
+</div>
+
+<div style='float:right'>
+  Last point: <span class='data' id='last'></span><br/>
+  Mission Time: <span class='data' id='mission'></span>min<br/>
+  Cycle: <span class='data' id='cycle'></span><br/>
+  Phase: <span class='data' id='phase'></span><br/>
+  Flags: <span class='data' id='flags'></span><br/>
+  Battery: <span class='data' id='batPct'></span>%<br/>
+  Error: <span class='data' id='error'></span><br/>
+  Sqft: <span class='data' id='sqft'></span><br/>
+  expireM: <span class='data' id='expireM'></span>min<br/>
+  rechrgM: <span class='data' id='rechrgM'></span>min<br/>
+  notReady: <span class='data' id='notReady'></span><br/>
+  theta: <span class='data' id='theta'></span><br/>
+  x: <span class='data' id='x'></span><br/>
+  y: <span class='data' id='y'></span><br/>
+</div>
+
+<script src="/js/map.js"></script>
+
+<% include footer.ejs %>
