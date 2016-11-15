@@ -154,6 +154,7 @@ function clearMap () {
   pathLayerContext.clearRect(0, 0, pathLayer.width, pathLayer.height);
   robotBodyLayerContext.clearRect(0, 0, robotBodyLayer.width, robotBodyLayer.height);
   textLayerContext.clearRect(0, 0, textLayer.width, textLayer.height);
+  pathLayerContext.beginPath();
 }
 
 function toggleMapping () {
@@ -182,19 +183,55 @@ function downloadCanvas () {
   document.getElementById('download').download = 'current_map.png';
 }
 
+function shiftCanvas (ctx, w, h, dx, dy) {
+  var imageData = ctx.getImageData(0, 0, w, h);
+  ctx.clearRect(0, 0, w, h);
+  ctx.putImageData(imageData, dx, dy);
+}
+
 $('.metrics').on('change', function () {
   var w = getValue('#sizew', pathLayer.width);
-  pathLayer.width = w;
-  robotBodyLayer.width = w;
-  textLayer.width = w;
-
   var h = getValue('#sizeh', pathLayer.height);
-  pathLayer.height = h;
-  robotBodyLayer.height = h;
-  textLayer.height = h;
+  if (pathLayer.width !== w) {
+    pathLayerContext.beginPath();
+    shiftCanvas(textLayerContext, w, h, (w - pathLayer.width), 0);
+    shiftCanvas(pathLayerContext, w, h, (w - pathLayer.width), 0);
+    var imgDataW = pathLayerContext.getImageData(0, 0, pathLayer.width, pathLayer.height);
+    var imgDataT1 = textLayerContext.getImageData(0, 0, textLayer.width, textLayer.height);
+    pathLayer.width = w;
+    robotBodyLayer.width = w;
+    textLayer.width = w;
+    pathLayerContext.putImageData(imgDataW, 0, 0);
+    textLayerContext.putImageData(imgDataT1, 0, 0);
+  }
 
-  xOffset = getValue('#offsetx', xOffset);
-  yOffset = getValue('#offsety', yOffset);
+  if (pathLayer.height !== h) {
+    pathLayerContext.beginPath();
+    shiftCanvas(textLayerContext, w, h, 0, (h - pathLayer.height));
+    shiftCanvas(pathLayerContext, w, h, 0, (h - pathLayer.height));
+    var imgDataH = pathLayerContext.getImageData(0, 0, pathLayer.width, pathLayer.height);
+    var imgDataT2 = textLayerContext.getImageData(0, 0, textLayer.width, textLayer.height);
+    pathLayer.height = h;
+    robotBodyLayer.height = h;
+    textLayer.height = h;
+    pathLayerContext.putImageData(imgDataH, 0, 0);
+    textLayerContext.putImageData(imgDataT2, 0, 0);
+  }
+
+  var newYOffset = getValue('#offsety', yOffset);
+  if (newYOffset !== yOffset) {
+    pathLayerContext.beginPath();
+    shiftCanvas(pathLayerContext, w, h, (yOffset - newYOffset), 0);
+    shiftCanvas(textLayerContext, w, h, (yOffset - newYOffset), 0);
+    yOffset = newYOffset;
+  }
+  var newXOffset = getValue('#offsetx', xOffset);
+  if (newXOffset !== xOffset) {
+    pathLayerContext.beginPath();
+    shiftCanvas(pathLayerContext, w, h, 0, (xOffset - newXOffset));
+    shiftCanvas(textLayerContext, w, h, 0, (xOffset - newXOffset));
+    xOffset = newXOffset;
+  }
 });
 
 $('.action').on('click', function () {
