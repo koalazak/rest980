@@ -1,15 +1,9 @@
-/*  global $ alert */
+/*  global $ alert sizeX sizeY xOffset yOffset updateEvery */
 /*  eslint no-unused-vars: "off" */
+/*  eslint no-global-assign: "off" */
+/*  eslint no-native-reassign: "off" */
 
 window.onload = startApp;
-
-// works for my home dimensions :p. Change with your values.
-var xOffset = 120;
-var yOffset = 505;
-var sizeX = 800;
-var sizeY = 800;
-var updateEvery = 800; // ms
-// TODO: make this dinamic: help!
 
 var pathLayerContext;
 var robotBodyLayerContext;
@@ -187,6 +181,18 @@ function shiftCanvas (ctx, w, h, dx, dy) {
   var imageData = ctx.getImageData(0, 0, w, h);
   ctx.clearRect(0, 0, w, h);
   ctx.putImageData(imageData, dx, dy);
+}
+
+function saveValues () {
+  var values = {
+    'offsetX': getValue('#offsetx', xOffset),
+    'offsetY': getValue('#offsety', yOffset),
+    'sizeW': getValue('#sizew', pathLayer.width),
+    'sizeH': getValue('#sizeh', pathLayer.height),
+    'pointIntervalMs': updateEvery
+  };
+  $.post('/map/values', values, function (data) {
+  });
 }
 
 $('.metrics').on('change', function () {

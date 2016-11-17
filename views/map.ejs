@@ -1,5 +1,13 @@
 <% include header.ejs %>
+<script type="text/javascript">
 
+var xOffset = <%=mapvalues.offsetX%>;
+var yOffset = <%=mapvalues.offsetY%>;
+var sizeX = <%=mapvalues.sizeW%>;
+var sizeY = <%=mapvalues.sizeH%>;
+var updateEvery = <%=mapvalues.pointIntervalMs%>;
+
+</script>
 <div>
   <button type="button" class='btn btn-success action' data-action='/api/local/action/start'>Start</button>
   <button type="button" class='btn btn-success action' data-action='/api/local/action/pause'>Pause</button>
@@ -13,7 +21,7 @@
   <div>
     Update every: <input type='text' id='updateevery' size='5' value=''/>ms.
     Canvas size: w:<input type='text' class='metrics' id='sizew' size='5' value=''/> h:<input class='metrics' type='text' id='sizeh' size='5' value=''/>
-    Offsets: x:<input type='text' class='metrics' id='offsetx' size='5' value=''/> y:<input class='metrics' type='text' id='offsety' size='5' value=''/>
+    Offsets: x:<input type='text' class='metrics' id='offsetx' size='5' value=''/> y:<input class='metrics' type='text' id='offsety' size='5' value=''/> <button type="button" onclick='saveValues();'>Save values</button>
   </div>
 
   <div>Command response: <div id='apiresponse'>ok</div></div>
