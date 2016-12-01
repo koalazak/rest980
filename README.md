@@ -4,8 +4,6 @@
 
 rest980 create a http server to map all [dorita980](https://github.com/koalazak/dorita980) methods in a REST API to control your iRobot Roomba 980 via HTTP requests.
 
-See [dorita980](https://github.com/koalazak/dorita980) for more information and instructions about how to get your robot blid and password.
-
 ## Install
 ```bash
 $ git clone https://github.com/koalazak/rest980.git
@@ -16,12 +14,12 @@ $ npm install
 ## Configuration
 The service can be configured by editing `config/default.json` or by setting the environment.
 
-|Config File Key|Environment Variable|Description|
-|-|-|-|
-|port|PORT|(default:3000) The HTTP port to listen on|
-|blid|BLID|(required) The Roomba blid *|
-|password|PASSWORD|(required) The Roomba password *|
-|robotIP|ROBOT_IP|(optional) Set if you know your robot IP to skip discovery and speed up startup|
+|Config File (`config/default.json`)|Environment|Description|
+|:---|:---|:---|
+|port|PORT|(default:3000) The HTTP port to listen on.|
+|blid|BLID|(required) The Roomba blid. *|
+|password|PASSWORD|(required) The Roomba password. *|
+|robotIP|ROBOT_IP|(optional) Set if you know your robot IP to skip discovery and speed up startup.|
 |basicAuthUser|BASIC_AUTH_USER|(optional) Set to enable basic auth. Both user and pass must be set.|
 |basicAuthPass|BASIC_AUTH_PASS|(optional) Set to enable basic auth. Both user and pass must be set.|
 
