@@ -4,7 +4,7 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
-var basicAuth = require('basic-auth')
+var basicAuth = require('basic-auth');
 var config = require('config');
 
 var helloRoute = require('./routes/index');
@@ -21,23 +21,23 @@ var authHandler = function (req, res, next) {
     return next();
   }
 
-  function unauthorized(res) {
+  function unauthorized (res) {
     res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
     return res.send(401);
-  };
+  }
 
   // Get basis auth credentials
   var user = basicAuth(req);
   if (!user || !user.name || !user.pass) {
     return unauthorized(res);
-  };
+  }
 
   // Check credentials
   if (user.name === basicAuthUser && user.pass === basicAuthPass) {
     return next();
   } else {
     return unauthorized(res);
-  };
+  }
 };
 
 app.set('views', path.join(__dirname, 'views'));
