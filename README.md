@@ -237,13 +237,15 @@ Success Response:
 ```
 {"status":"OK","method":"multipleFieldSet"}
 ```
-## Mapping (experimental)
-
-Visiting  `http://serverIP:3000/map` with your browser you can play with this cool experiment.
-
-[![iRobot Roomba 980 cleaning map using dorita980 lib](https://img.youtube.com/vi/XILvHFEX7TM/0.jpg)](https://www.youtube.com/watch?v=XILvHFEX7TM)
-
-
 ## Host images or files
 
 You can add images or files to `public/` folder to serve static files.
+
+## Realtime Map (experimental)
+
+Visiting  `http://serverIP:3000/map` with your browser you can play with this cool experiment
+
+![/map](https://cloud.githubusercontent.com/assets/8185092/20685415/23e2ed58-b593-11e6-8492-280cc381abda.png)
+
+[![iRobot Roomba 980 cleaning map using dorita980 lib](https://img.youtube.com/vi/XILvHFEX7TM/0.jpg)](https://www.youtube.com/watch?v=XILvHFEX7TM)
+
