@@ -12,7 +12,7 @@ $ npm install
 ```
 
 ## Configuration
-The service can be configured by editing `config/default.json` or by setting the environment.
+The service can be configured by editing `config/default.json` or by setting environment variables.
 
 |Config File (`config/default.json`)|Environment|Description|
 |:---|:---|:---|
@@ -47,6 +47,10 @@ Run Docker image:
 ```
 docker run -e BLID=myuser -e PASSWORD=mypass -e ROBOT_IP=myrobotIP koalazak/rest980
 ```
+
+## Dockerfile
+
+Also you can local build and test in Docker from this [Dockerfile](https://github.com/koalazak/rest980/blob/master/docker/Dockerfile)
 
 ## API documentation
 
@@ -233,6 +237,12 @@ Success Response:
 ```
 {"status":"OK","method":"multipleFieldSet"}
 ```
+## Mapping (experimental)
+
+Visiting  `http://serverIP:3000/map` with your browser you can play with this cool experiment.
+
+[![iRobot Roomba 980 cleaning map using dorita980 lib](https://img.youtube.com/vi/XILvHFEX7TM/0.jpg)](https://www.youtube.com/watch?v=XILvHFEX7TM)
+
 
 ## Host images or files
 
