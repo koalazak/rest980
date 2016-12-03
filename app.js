@@ -16,10 +16,14 @@ var app = express();
 // Authentication handler
 var basicAuthUser = process.env.BASIC_AUTH_USER || config.basicAuthUser;
 var basicAuthPass = process.env.BASIC_AUTH_PASS || config.basicAuthPass;
+var publicRoutes = [];
+
 var authHandler = function (req, res, next) {
-  if (!basicAuthUser || !basicAuthPass) {
-    return next();
-  }
+  // Allow if basic auth is not enabled
+  if (!basicAuthUser || !basicAuthPass) return next();
+
+  // Allow whitelisted public routes
+  if (publicRoutes.indexOf(req.path) > -1) return next();
 
   function unauthorized (res) {
     res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
@@ -47,10 +51,11 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(authHandler);
 
-app.use('/', authHandler, helloRoute);
-app.use('/api', authHandler, apiRoute);
-app.use('/map', authHandler, mapRoute);
+app.use('/', helloRoute);
+app.use('/api', apiRoute);
+app.use('/map', mapRoute);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
