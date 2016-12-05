@@ -50,7 +50,11 @@ docker run -e BLID=myuser -e PASSWORD=mypass -e ROBOT_IP=myrobotIP koalazak/rest
 
 ## Dockerfile
 
-Also you can local build and test in Docker from this [Dockerfile](https://github.com/koalazak/rest980/blob/master/docker/Dockerfile)
+Also you can local build and test in Docker from this [Dockerfile](https://github.com/koalazak/rest980/blob/master/Dockerfile)
+
+```
+docker build . -t koalazak/rest980 
+```
 
 ## API documentation
 
