@@ -1,6 +1,6 @@
 {
   "name": "rest980",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "dorita980 REST interface to control your iRobot Roomba 980",
   "private": true,
   "scripts": {
@@ -17,7 +17,7 @@
     "body-parser": "~1.15.1",
     "config": "^1.21.0",
     "cookie-parser": "~1.4.3",
-    "debug": "~2.3.0",
+    "debug": "~2.5.0",
     "dorita980": "^2.4.6",
     "ejs": "~2.5.2",
     "express": "~4.14.0",
