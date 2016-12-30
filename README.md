@@ -16,14 +16,20 @@ The service can be configured by editing `config/default.json` or by setting env
 
 |Config File (`config/default.json`)|Environment|Description|
 |:---|:---|:---|
-|port|PORT|(default:3000) The HTTP port to listen on.|
-|blid|BLID|(required) The Roomba blid. *|
-|password|PASSWORD|(required) The Roomba password. *|
-|robotIP|ROBOT_IP|(optional) Set if you know your robot IP to skip discovery and speed up startup.|
-|basicAuthUser|BASIC_AUTH_USER|(optional) Set to enable basic auth. Both user and pass must be set.|
-|basicAuthPass|BASIC_AUTH_PASS|(optional) Set to enable basic auth. Both user and pass must be set.|
+|port|PORT|*(default:3000)* The HTTP port to listen on.|
+|blid|BLID|*(required)* The Roomba blid. *|
+|password|PASSWORD|*(required)* The Roomba password. *|
+|robotIP|ROBOT_IP|*(optional)* Set if you know your robot IP to skip discovery and speed up startup.|
+|basicAuthUser|BASIC_AUTH_USER|*(optional)* Set to enable basic auth. Both user and pass must be set.|
+|basicAuthPass|BASIC_AUTH_PASS|*(optional)* Set to enable basic auth. Both user and pass must be set.|
+|sslKeyFile|SSL_KEY_FILE|*(optional)* Set path to key file to enable HTTPS. Both key and cert must be set. [(how to create self signed cert)](http://www.akadia.com/services/ssh_test_certificate.html)
+|
+|sslCertFile|SSL_CERT_FILE|*(optional)* Set path to cert file to enable HTTPS. Both key and cert must be set. [(how to create self signed cert)](http://www.akadia.com/services/ssh_test_certificate.html)
+|
 
 \* *See [dorita980](https://github.com/koalazak/dorita980) for more information and instructions for obtaining your robot blid and password*
+
+
 
 ## Start API Server
 ```

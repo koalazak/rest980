@@ -7,6 +7,8 @@
 var app = require('../app');
 var debug = require('debug')('rest980:server');
 var http = require('http');
+var https = require('https');
+var fs = require('fs');
 var config = require('config');
 
 /**
@@ -17,10 +19,20 @@ var port = normalizePort(process.env.PORT || config.port);
 app.set('port', port);
 
 /**
- * Create HTTP server.
+ * Create server.
  */
-
 var server = http.createServer(app);
+
+var sslKeyFile = process.env.SSL_KEY_FILE || config.sslKeyFile;
+var sslCertFile = process.env.SSL_CERT_FILE || config.sslCertFile;
+
+if (sslKeyFile && sslCertFile) {
+  var sslOpts = {
+    key: fs.readFileSync(sslKeyFile),
+    cert: fs.readFileSync(sslCertFile)
+  };
+  server = https.createServer(sslOpts, app);
+}
 
 /**
  * Listen on provided port, on all network interfaces.
@@ -87,5 +99,5 @@ function onListening () {
   var bind = typeof addr === 'string'
     ? 'pipe ' + addr
     : 'port ' + addr.port;
-  debug('Listening on ' + bind);
+  debug('Listening on ' + bind + (server.key ? ' (HTTPS)' : ''));
 }

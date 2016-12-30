@@ -4,5 +4,7 @@
   "password": "",
   "robotIP": "",
   "basicAuthUser": null,
-  "basicAuthPass": null
+  "basicAuthPass": null,
+  "sslKeyFile": null,
+  "sslCertFile": null
 }
