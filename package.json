@@ -7,7 +7,8 @@
     "start": "node ./bin/www",
     "pretest": "npm install",
     "check:style": "eslint .",
-    "test": "npm run check:style"
+    "test": "npm run check:style",
+    "getpassword": "node ./node_modules/dorita980/bin/getpassword.js"
   },
   "repository": {
     "type": "git",
