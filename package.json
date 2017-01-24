@@ -1,13 +1,14 @@
 {
   "name": "rest980",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "dorita980 REST interface to control your iRobot Roomba 980",
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
     "pretest": "npm install",
     "check:style": "eslint .",
-    "test": "npm run check:style"
+    "test": "npm run check:style",
+    "getpassword": "node ./node_modules/dorita980/bin/getpassword.js"
   },
   "repository": {
     "type": "git",
