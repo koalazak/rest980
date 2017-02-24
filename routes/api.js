@@ -6,6 +6,14 @@ var dorita980 = require('dorita980');
 var blid = process.env.BLID || config.blid;
 var password = process.env.PASSWORD || config.password;
 var robotIP = process.env.ROBOT_IP || config.robotIP;
+var knownIP = robotIP;
+var firmwareVersion = process.env.FIRMWARE_VERSION || config.firmwareVersion || 1;
+var enableLocal = process.env.ENABLE_LOCAL || config.enableLocal || 'yes';
+var enableCloud = process.env.ENABLE_CLOUD || config.enableCloud || 'yes';
+var keepAlive = process.env.KEEP_ALIVE || config.keepAlive || 'yes';
+
+// Temporal:
+if (firmwareVersion === 2) enableCloud = 'no';
 
 if (!blid || !password) {
   throw new Error('Config not found. Please edit config/default.json file with your robot credentials. Or set BLID, PASSWORD and ROBOT_IP enviroment variables.');
@@ -16,13 +24,16 @@ var myRobot = {};
 var handleIP = robotIP ? function (cb) { cb(null, robotIP); } : dorita980.getRobotIP;
 handleIP(function (e, ip) {
   if (e) throw e;
-  myRobot.local = new dorita980.Local(blid, password, ip);
-  myRobot.cloud = new dorita980.Cloud(blid, password, ip);
+  knownIP = ip;
+  if (enableLocal === 'yes') {
+    if (firmwareVersion === 1 || (keepAlive === 'yes')) myRobot.local = new dorita980.Local(blid, password, ip, firmwareVersion);
+  }
+  if (enableCloud === 'yes') myRobot.cloud = new dorita980.Cloud(blid, password, firmwareVersion);
 });
 
 router.get('/', function (req, res) {
   res.send({
-    version: '1.0'}
+    version: '1.0.' + firmwareVersion}
   );
 });
 
@@ -36,6 +47,8 @@ router.get('/status/mission', function (req, res, next) {
 */
 
 // LOCAL:
+
+var missingInFirmw2 = ['setTime', 'setPtime'];
 
 router.get('/local/action/start', map2dorita('local', 'start'));
 router.get('/local/action/stop', map2dorita('local', 'stop'));
@@ -78,6 +91,10 @@ router.get('/local/info/lastwireless', map2dorita('local', 'getWirelessLastStatu
 router.get('/local/info/mission', map2dorita('local', 'getMission'));
 router.get('/local/info/sys', map2dorita('local', 'getSys'));
 
+if (firmwareVersion === 2) {
+  router.get('/local/info/state', map2dorita('local', 'getRobotState'));
+}
+
 // CLOUD:
 
 router.get('/cloud/info/status', map2dorita('cloud', 'getStatus'));
@@ -104,15 +121,43 @@ router.get('/cloud/action/fbeep', map2dorita('cloud', 'fbeep'));
 
 function map2dorita (source, method, hasArgs) {
   return function (req, res, next) {
-    if (!myRobot.local || !myRobot.cloud) return next(new Error('Connection with robot not ready.'));
+    if (firmwareVersion === 2 && source === 'cloud') {
+      // temporal
+      return next('Cloud API not implemented yet for firmware 2.x.x');
+    }
+    if (firmwareVersion === 2 && missingInFirmw2.indexOf(method) > -1) {
+      return next('Method not implemented for firmware 2.x.x');
+    }
+    if (enableLocal === 'no' && source === 'local') {
+      return next('Local API disabled by config.');
+    }
+    if (enableCloud === 'no' && source === 'cloud') {
+      return next('Cloud API disabled by config.');
+    }
+
+    if ((!myRobot.local && enableLocal === 'yes' && keepAlive === 'yes') || (!myRobot.cloud && enableCloud === 'yes')) return next(new Error('Connection with robot not ready.'));
 
     if (hasArgs) {
       if (!req.body) return next('Invalid arguments.');
+    }
+
+    if (keepAlive === 'no' && firmwareVersion === 2) {
+      return sendAndDisconnect(method, hasArgs ? req.body : undefined, res, next);
     }
     myRobot[source][method](hasArgs ? req.body : undefined).then(function (resp) {
       res.send(resp);
     }).catch(next);
   };
+}
+
+function sendAndDisconnect (method, args, res, next) {
+  let client = new dorita980.Local(blid, password, knownIP, 2);
+  client.on('connect', function () {
+    client[method](args).then(function (resp) {
+      res.send(resp);
+      client.end();
+    }).catch(next);
+  });
 }
 
 module.exports = router;

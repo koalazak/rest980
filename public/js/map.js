@@ -63,7 +63,14 @@ function startMissionLoop () {
 
 function messageHandler (msg) {
   // msg is the object returned by dorita980.getMission() promise.
-
+  if (msg.cleanMissionStatus) {
+    // firmware version 2
+    msg.ok = msg.cleanMissionStatus;
+    msg.ok.pos = msg.pose;
+    msg.ok.batPct = msg.batPct;
+    $('#bin').html(msg.bin.present);
+    $('#nMssn').html(msg.ok.nMssn);
+  }
   msg.ok.time = new Date().toISOString();
   $('#mapStatus').html('drawing...');
   $('#last').html(msg.ok.time);

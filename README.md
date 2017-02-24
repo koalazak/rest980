@@ -11,6 +11,10 @@ $ cd rest980
 $ npm install
 ```
 
+## Fimrware version
+
+[Check your robot firmware version!](http://homesupport.irobot.com/app/answers/detail/a_id/529) and set your firmware version in `firmwareVersion` rest980 configuration!
+
 ## Configuration
 The service can be configured by editing `config/default.json` or by setting environment variables.
 
@@ -20,6 +24,10 @@ The service can be configured by editing `config/default.json` or by setting env
 |blid|BLID|*(required)* The Roomba blid. *|
 |password|PASSWORD|*(required)* The Roomba password. *|
 |robotIP|ROBOT_IP|*(optional)* Set if you know your robot IP to skip discovery and speed up startup.|
+|firmwareVersion|FIRMWARE_VERSION|*(optional)* Set to 1 or 2 depends of your robot firmware version. Default to 1 for firmware 1.6.6|
+|enableLocal|ENABLE_LOCAL|*(optional)* Set to 'no' if you want to disable local API. Default 'yes'.|
+|enableCloud|ENABLE_CLOUD|*(optional)* Set to 'no' if you want to disable cloud API. Default 'yes'.|
+|keepAlive|KEEP_ALIVE|*(optional)* Set to 'no' if you want to connect and disconnect to the robot in each request (slow but leave the connection free for the official mobile app).|
 |basicAuthUser|BASIC_AUTH_USER|*(optional)* Set to enable basic auth. Both user and pass must be set.|
 |basicAuthPass|BASIC_AUTH_PASS|*(optional)* Set to enable basic auth. Both user and pass must be set.|
 |sslKeyFile|SSL_KEY_FILE|*(optional)* Set path to key file to enable HTTPS. Both key and cert must be set. [(how to create self signed cert)](http://www.akadia.com/services/ssh_test_certificate.html)
@@ -108,6 +116,7 @@ Available records:
 - lastwireless
 - sys
 - sku
+- state (only in firmware 2)
 
 Example: get current mission variables
 ```http
@@ -136,12 +145,12 @@ All configuration endpoints are under `/api/local/config/[configName]` using `GE
 
 Available configName:
 
-- ptime (only GET)
+- ptime (only GET in firmware 1)
 - bbrun (only GET)
 - cloud (only GET)
 - langs (only GET. Use `preferences` to set lang)
 - week
-- time
+- time (POST Y GET in firmware 1. Only GET in Firmware 2)
 - preferences
 - carpetBoost/auto (only POST. Use `preferences` to get current config)
 - carpetBoost/performance (only POST. Use `preferences` to get current config)
@@ -154,11 +163,11 @@ Available configName:
 - alwaysFinish/on (only POST. Use `preferences` to get current config)
 - alwaysFinish/off (only POST. Use `preferences` to get current config)
 
-See [dorita980](https://github.com/koalazak/dorita980) documentation for responses and body params for each method.
+See [dorita980](https://github.com/koalazak/dorita980) documentation for responses and body params for each method and version firmware.
 
 ### Examples:
 
-#### Get preferences:
+#### Get preferences in firmware 1:
 ```http
 GET http://192.168.1.110:3000/api/local/config/preferences
 ```
@@ -179,7 +188,9 @@ Success Response:
  id: 2 }
 ```
 
-#### Set preferences:
+See [dorita980](https://github.com/koalazak/dorita980) documentation for preferences in firmware 2.
+
+#### Set preferences in firmware 1:
 ```http
 POST http://192.168.1.110:3000/api/local/config/preferences
 ```
@@ -198,6 +209,8 @@ Success Response:
 {"ok":null,"id":293}
 ```
 
+See [dorita980](https://github.com/koalazak/dorita980) documentation for preferences in firmware 2.
+
 #### Set cleaning passes to two:
 ```http
 POST http://192.168.1.110:3000/api/local/config/cleaningPasses/two
@@ -212,7 +225,7 @@ Success Response:
 {"ok":null,"id":293}
 ```
 
-## Cloud
+## Cloud (only for firmware 1.6.x)
 
 Use `GET` in all `info` endpoints without query params:
 
