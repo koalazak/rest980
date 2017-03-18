@@ -23,7 +23,7 @@ if (!blid || !password) {
 
 var myRobot = {};
 
-var handleIP = robotIP ? function (cb) { cb(null, robotIP); } : dorita980.getRobotIP;
+var handleIP = (robotIP || enableLocal === 'no') ? function (cb) { cb(null, robotIP); } : dorita980.getRobotIP;
 handleIP(function (e, ip) {
   if (e) throw e;
   knownIP = ip;
