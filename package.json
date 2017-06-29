@@ -1,6 +1,6 @@
 {
   "name": "rest980",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "dorita980 REST interface to control your iRobot Roomba 980",
   "private": true,
   "scripts": {
@@ -22,7 +22,7 @@
     "dorita980": "^3.0.8",
     "ejs": "^2.5.2",
     "express": "^4.14.0",
-    "jsonfile": "^2.4.0",
+    "jsonfile": "^3.0.0",
     "morgan": "^1.7.0",
     "basic-auth": "1.1.0"
   },
