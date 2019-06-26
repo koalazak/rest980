@@ -1,6 +1,6 @@
 {
   "name": "rest980",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "description": "dorita980 REST interface to control your iRobot Roomba 980",
   "private": true,
   "scripts": {
@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "semistandard": "^9.1.0",
-    "eslint": "^3.8.0",
+    "eslint": "^4.18.2",
     "eslint-config-standard": "^6.2.0",
     "eslint-config-semistandard": "^7.0.0",
     "eslint-plugin-promise": "^3.0.0",
