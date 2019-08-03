@@ -146,7 +146,8 @@ function map2dorita (source, method, hasArgs) {
     if (keepAlive === 'no' && firmwareVersion === 2) {
       return sendAndDisconnect(method, hasArgs ? req.body : undefined, res, next);
     }
-    myRobot[source][method](hasArgs ? req.body : undefined).then(function (resp) {
+    var hasBody = req.body.constructor === Object && Object.keys(req.body).length > 0;
+    myRobot[source][method](hasArgs || hasBody ? req.body : undefined).then(function (resp) {
       res.send(resp);
     }).catch(next);
   };
