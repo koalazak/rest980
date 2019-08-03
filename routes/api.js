@@ -58,6 +58,13 @@ router.get('/local/action/pause', map2dorita('local', 'pause'));
 router.get('/local/action/dock', map2dorita('local', 'dock'));
 router.get('/local/action/resume', map2dorita('local', 'resume'));
 
+
+router.post('/local/action/start', map2dorita('local', 'start'));
+router.post('/local/action/stop', map2dorita('local', 'stop'));
+router.post('/local/action/pause', map2dorita('local', 'pause'));
+router.post('/local/action/dock', map2dorita('local', 'dock'));
+router.post('/local/action/resume', map2dorita('local', 'resume'));
+
 router.get('/local/config/time', map2dorita('local', 'getTime'));
 router.post('/local/config/time', map2dorita('local', 'setTime', true));
 
@@ -142,11 +149,11 @@ function map2dorita (source, method, hasArgs) {
     if (hasArgs) {
       if (!req.body) return next('Invalid arguments.');
     }
+    var hasBody = req.body.constructor === Object && Object.keys(req.body).length > 0;
 
     if (keepAlive === 'no' && firmwareVersion === 2) {
-      return sendAndDisconnect(method, hasArgs ? req.body : undefined, res, next);
+      return sendAndDisconnect(method, hasArgs || hasBody ? req.body : undefined, res, next);
     }
-    var hasBody = req.body.constructor === Object && Object.keys(req.body).length > 0;
     myRobot[source][method](hasArgs || hasBody ? req.body : undefined).then(function (resp) {
       res.send(resp);
     }).catch(next);
