@@ -149,7 +149,8 @@ function map2dorita (source, method, hasArgs) {
     if (hasArgs) {
       if (!req.body) return next('Invalid arguments.');
     }
-    var hasBody = req.body.constructor === Object && Object.keys(req.body).length > 0;
+    var hasBody = req.body !== undefined
+    console.log(`HasBody was ${hasBody}`);
 
     if (keepAlive === 'no' && firmwareVersion === 2) {
       return sendAndDisconnect(method, hasArgs || hasBody ? req.body : undefined, res, next);
