@@ -58,7 +58,7 @@ router.get('/local/action/pause', map2dorita('local', 'pause'));
 router.get('/local/action/dock', map2dorita('local', 'dock'));
 router.get('/local/action/resume', map2dorita('local', 'resume'));
 
-router.post('/local/action/cleanRoom', map2dorita('local', 'start', true));
+router.post('/local/action/cleanRoom', map2dorita('local', 'cleanRoom', true));
 
 router.get('/local/config/time', map2dorita('local', 'getTime'));
 router.post('/local/config/time', map2dorita('local', 'setTime', true));
