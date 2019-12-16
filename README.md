@@ -91,6 +91,7 @@ Available actions:
 - pause
 - dock
 - resume
+- cleanRoom
 
 Example: start to clean
 
@@ -101,6 +102,20 @@ Success Response:
 ```
 {"ok":null,"id":23}
 ```
+
+Example: clean a specific room
+
+Some roomba types support "room specificic cleaning" - at the time of writing, at least the s9 and the i7 support this featrue. Assuming you have this model, and have a "Smart Map" for the floor you're trying to clean, you can send room specific cleaning commands. The easiest way to find out the values for this is to start a room specific clean via the app, and then look at the `state` endpoint (documented below) and find the `lastCommand` entry. Using this, you can find the room ids. These seem to be stable over time, unless a re-training or new smart map is saved.
+
+The `pmap_id` and `user_pmapv_id` are also derived from the same `lastCommand` trick. These also seem to be stable - unless a new training run or edit to the smart map happens. It's important to get these correct, else your roomba won't clean.
+
+
+```sh
+curl -X POST http://192.168.1.110:3000/api/local/action/cleanRoom -H 'Content-Type: application/json' -d '{"ordered": 0, "pmap_id": "123456", "regions": [{"region_id":"5", "region_name":"Hallway","region_type":"hallway"}], "user_pmapv_id": "987654"}'
+```
+
+> Note that this is a `POST` becuase it has a body, unlike the other related `action` methods.
+
 
 ### Info
 
