@@ -1,7 +1,7 @@
 # rest980
 [![Build Status](https://travis-ci.org/koalazak/rest980.svg?branch=master)](https://travis-ci.org/koalazak/rest980)
 
-rest980 create a http server to map all [dorita980](https://github.com/koalazak/dorita980) methods in a REST API to control your iRobot Roomba 900 series 980 / i7 / i7+ via HTTP requests.
+rest980 create a http server to map all [dorita980](https://github.com/koalazak/dorita980) methods in a REST API to control your iRobot Roomba 900 series 980 / i7 / i7+ or Braava m6 via HTTP requests.
 
 ## Install
 ```bash
@@ -23,7 +23,7 @@ The service can be configured by editing `config/default.json` or by setting env
 |blid|BLID|*(required)* The Roomba blid. *|
 |password|PASSWORD|*(required)* The Roomba password. *|
 |robotIP|ROBOT_IP|*(optional)* Set if you know your robot IP to skip discovery and speed up startup.|
-|firmwareVersion|FIRMWARE_VERSION|*(optional)* Set to 1 or 2 depends of your robot firmware version. Use `2` for any firmware >=2 (yes, use 2 if you have firmware version 3). Default to 1 for firmware 1.6.6|
+|firmwareVersion|FIRMWARE_VERSION|*(optional)* Set to 1, 2 or 3 depending of your robot firmware version. Default to 1 for firmware 1.6.6|
 |enableLocal|ENABLE_LOCAL|*(optional)* Set to 'no' if you want to disable local API. Default 'yes'.|
 |enableCloud|ENABLE_CLOUD|*(optional)* Set to 'no' if you want to disable cloud API. Default 'yes'.|
 |keepAlive|KEEP_ALIVE|*(optional)* Set to 'no' if you want to connect and disconnect to the robot in each request (slow but leave the connection free for the official mobile app).|
