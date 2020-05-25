@@ -1,0 +1,26 @@
+#!/usr/bin/make -f
+
+export DH_OPTIONS
+DESTDIR=debian/rest980
+
+%:
+	dh $@
+
+clean:
+	rm -f debian/*.debhelper.log
+	dh_clean
+
+build:
+	npm install
+
+override_dh_auto_install:
+	dh_auto_install
+	install -g 0 -o 0 -d $(DESTDIR)/opt/rest980
+	install -Dm644 debian/rest980.conf $(DESTDIR)/etc/rest980.conf
+	cp app.js $(DESTDIR)/opt/rest980/
+	cp -r node_modules $(DESTDIR)/opt/rest980/
+	cp -r bin $(DESTDIR)/opt/rest980/
+	cp -r public $(DESTDIR)/opt/rest980/
+	cp -r routes $(DESTDIR)/opt/rest980/
+	cp -r views $(DESTDIR)/opt/rest980/
+	cp -r config $(DESTDIR)/opt/rest980/

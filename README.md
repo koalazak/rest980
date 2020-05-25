@@ -3,69 +3,48 @@
 
 rest980 create a http server to map all [dorita980](https://github.com/koalazak/dorita980) methods in a REST API to control your iRobot Roomba 900 series 980 / i7 / i7+ via HTTP requests.
 
+## Build
+You can build the package for an specific architecture. Possible values are `armhf`, `arm64`, `amd64` and `i386`. 
+```bash
+$ dpkg-buildpackage -a armhf -us -uc -b
+```
+
 ## Install
 ```bash
-$ git clone https://github.com/koalazak/rest980.git
-$ cd rest980
-$ npm install
+# dpkg -i rest980_2.1.0~ado1_armhf.deb
 ```
+
+## Configuration
+The configuration file is in `/etc/rest980.conf`.
+
+|Property|Default|Description|
+|:---|:---|:---|
+|ROBOT_IP| |*(optional)* Set if you know your robot IP to skip discovery and speed up startup|
+|BLID| |*(required)* The Roomba blid.|
+|PASSWORD| |*(required)* The Roomba password|
+|FIRMWARE_VERSION|2|*(optional)*Set to 1 or 2 depends of your robot firmware version. Use `2` for any firmware >=2 (yes, use 2 if you have firmware version 3). Default to 1 for firmware 1.6.6|
+|ENABLE_LOCAL|yes|*(optional)* Set to 'no' if you want to disable local API. Default 'yes'.|
+|ENABLE_CLOUD|no|*(optional)* Set to 'no' if you want to disable cloud API. Default 'yes'.|
+|KEEP_ALIVE|yes|*(optional)* Set to 'no' if you want to connect and disconnect to the robot in each request (slow but leave the connection free for the official mobile app).|
+|SSL_KEY_FILE| |*(optional)* Set path to key file to enable HTTPS. Both key and cert must be set. [(how to create self signed cert)](http://www.akadia.com/services/ssh_test_certificate.html)|
+|SSL_CERT_FILE| |*(optional)* Set path to cert file to enable HTTPS. Both key and cert must be set. [(how to create self signed cert)](http://www.akadia.com/services/ssh_test_certificate.html)|
+|PORT|3000|*(required)* The HTTP port to listen on|
+
+*See [dorita980](https://github.com/koalazak/dorita980) for more information and instructions for obtaining your robot blid and password*
 
 ## Fimrware version
 
 [Check your robot firmware version!](http://homesupport.irobot.com/app/answers/detail/a_id/529) and set your firmware version in `firmwareVersion` rest980 configuration!
 
-## Configuration
-The service can be configured by editing `config/default.json` or by setting environment variables.
+## Service
+To enable `rest980` on reboot:
 
-|Config File (`config/default.json`)|Environment|Description|
-|:---|:---|:---|
-|port|PORT|*(default:3000)* The HTTP port to listen on.|
-|blid|BLID|*(required)* The Roomba blid. *|
-|password|PASSWORD|*(required)* The Roomba password. *|
-|robotIP|ROBOT_IP|*(optional)* Set if you know your robot IP to skip discovery and speed up startup.|
-|firmwareVersion|FIRMWARE_VERSION|*(optional)* Set to 1 or 2 depends of your robot firmware version. Use `2` for any firmware >=2 (yes, use 2 if you have firmware version 3). Default to 1 for firmware 1.6.6|
-|enableLocal|ENABLE_LOCAL|*(optional)* Set to 'no' if you want to disable local API. Default 'yes'.|
-|enableCloud|ENABLE_CLOUD|*(optional)* Set to 'no' if you want to disable cloud API. Default 'yes'.|
-|keepAlive|KEEP_ALIVE|*(optional)* Set to 'no' if you want to connect and disconnect to the robot in each request (slow but leave the connection free for the official mobile app).|
-|basicAuthUser|BASIC_AUTH_USER|*(optional)* Set to enable basic auth. Both user and pass must be set.|
-|basicAuthPass|BASIC_AUTH_PASS|*(optional)* Set to enable basic auth. Both user and pass must be set.|
-|sslKeyFile|SSL_KEY_FILE|*(optional)* Set path to key file to enable HTTPS. Both key and cert must be set. [(how to create self signed cert)](http://www.akadia.com/services/ssh_test_certificate.html)|
-|sslCertFile|SSL_CERT_FILE|*(optional)* Set path to cert file to enable HTTPS. Both key and cert must be set. [(how to create self signed cert)](http://www.akadia.com/services/ssh_test_certificate.html)|
+    # systemctl enable rest980
+    
+To start and stop the service:
 
-*See [dorita980](https://github.com/koalazak/dorita980) for more information and instructions for obtaining your robot blid and password*
-
-
-
-## Start API Server
-```
-$ cd rest980
-$ DEBUG=rest980:* npm start
-rest980:server Listening on port 3000
-```
-
-omit `DEBUG=rest980:*` if you want. You can just run with `npm start`
-
-## Or use Docker Image
-
-You can use [koalazak/rest980](https://hub.docker.com/r/koalazak/rest980/) docker image to run this server in a docker container. Usefull to run on [Synology](https://www.synology.com/en-global/) for example.
-
-Pull Docker image:
-```bash
-docker pull koalazak/rest980
-```
-
-Run Docker image:
-```
-docker run -e BLID=myuser -e PASSWORD=mypass -e ROBOT_IP=myrobotIP koalazak/rest980
-```
-
-## Dockerfile
-
-Also you can local build and test in Docker from this [Dockerfile](https://github.com/koalazak/rest980/blob/master/Dockerfile)
-
-```
-docker build . -t koalazak/rest980 
-```
+    # systemctl start rest980
+    # systemctl stop rest980
 
 ## API documentation
 

@@ -1,0 +1,13 @@
+[Unit]
+Description=REST interface to control your iRobot Roomba 980
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/rest980.conf
+Environment="NODE_PATH=/opt/rest980/node_modules"
+Environment="SUPPRESS_NO_CONFIG_WARNING=1"
+Environment="DEBUG=rest980:*"
+ExecStart=/opt/rest980/bin/www
+
+[Install]
+WantedBy=multi-user.target
