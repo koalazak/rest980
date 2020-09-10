@@ -56,7 +56,7 @@ docker pull koalazak/rest980
 
 Run Docker image:
 ```
-docker run -e BLID=myuser -e PASSWORD=mypass -e ROBOT_IP=myrobotIP koalazak/rest980
+docker run -p 3000:3000 -e BLID=myuser -e PASSWORD=mypass -e ROBOT_IP=myrobotIP koalazak/rest980
 ```
 
 ## Dockerfile
@@ -65,6 +65,16 @@ Also you can local build and test in Docker from this [Dockerfile](https://githu
 
 ```
 docker build . -t koalazak/rest980 
+```
+
+You can also use bash script for automatic build (image) and create of the container by invoking the command.
+You will be prompted about PORT, BLID, PASSWORD and ROBOT_IP.
+If you do not want to be prompted, rather have this script for your own and simply run it, edit it and set thouse variables in Configuration part.
+I would strongly suggest to edit also "config/default.json" with your iRobot parameters. That way it will be copied to container during build.
+
+```
+chmod +x dockerCreate.sh # If no privilages messagee appears
+./dockerCreate.sh
 ```
 
 ## API documentation
