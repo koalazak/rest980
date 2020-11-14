@@ -10,7 +10,7 @@ $ cd rest980
 $ npm install
 ```
 
-## Fimrware version
+## Firmware version
 
 [Check your robot firmware version!](http://homesupport.irobot.com/app/answers/detail/a_id/529) and set your firmware version in `firmwareVersion` rest980 configuration!
 
@@ -177,7 +177,7 @@ Available configName:
 
 See [dorita980](https://github.com/koalazak/dorita980) documentation for responses and body params for each method and version firmware.
 
-### Examples:
+### Examples
 
 #### Get preferences in firmware 1:
 ```http
@@ -223,7 +223,7 @@ Success Response:
 
 See [dorita980](https://github.com/koalazak/dorita980) documentation for preferences in firmware 2.
 
-#### Set cleaning passes to two:
+#### Set cleaning passes to two
 ```http
 POST http://192.168.1.110:3000/api/local/config/cleaningPasses/two
 ```
