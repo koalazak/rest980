@@ -93,9 +93,10 @@ router.get('/local/info/sku', map2dorita('local', 'getSKU'));
 router.get('/local/info/wireless', map2dorita('local', 'getWirelessStatus'));
 router.get('/local/info/lastwireless', map2dorita('local', 'getWirelessLastStatus'));
 router.get('/local/info/mission', map2dorita('local', 'getMission'));
+router.get('/local/info/model', map2dorita('local', 'getModel'));
 router.get('/local/info/sys', map2dorita('local', 'getSys'));
 
-if (firmwareVersion === 2) {
+if (firmwareVersion > 1) {
   router.get('/local/info/state', map2dorita('local', 'getRobotState'));
 }
 
