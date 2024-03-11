@@ -1,5 +1,4 @@
 # rest980
-[![Build Status](https://travis-ci.org/koalazak/rest980.svg?branch=master)](https://travis-ci.org/koalazak/rest980)
 
 rest980 create a http server to map all [dorita980](https://github.com/koalazak/dorita980) methods in a REST API to control your iRobot Roomba 900 series 980 / i7 / i7+ via HTTP requests.
 
