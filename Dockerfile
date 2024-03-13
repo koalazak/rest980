@@ -1,5 +1,5 @@
 # Use latest node
-FROM node:boron
+FROM node:gallium
 
 MAINTAINER koalazak <zak.tux@gmail.com>
 
@@ -28,6 +28,7 @@ ENV KEEP_ALIVE=
 ENV SSL_KEY_FILE=
 ENV SSL_CERT_FILE=
 ENV PORT=3000
+ENV ROBOT_CIPHERS=TLS_AES_256_GCM_SHA384
 
 EXPOSE ${PORT}
 
