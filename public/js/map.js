@@ -68,7 +68,10 @@ function messageHandler (msg) {
     msg.ok = msg.cleanMissionStatus;
     msg.ok.pos = msg.pose;
     msg.ok.batPct = msg.batPct;
-    $('#bin').html(msg.bin.present);
+    if (msg.bin) { $('#bin').html(msg.bin.present); $('#binRow').show(); } else { $('#binRow').hide(); }
+    if (msg.detectedPad) { $('#detectedPad').html(msg.detectedPad); $('#detectedPadRow').show(); } else { $('#detectedPadRow').hide(); }
+    if (msg.mopReady) { $('#tankPresent').html(msg.mopReady.tankPresent); $('#tankPresentRow').show(); } else { $('#tankPresentRow').hide(); }
+    if (msg.mopReady) { $('#lidClosed').html(msg.mopReady.lidClosed); $('#lidClosedRow').show(); } else { $('#lidClosedRow').hide(); }
     $('#nMssn').html(msg.ok.nMssn);
   }
   msg.ok.time = new Date().toISOString();
