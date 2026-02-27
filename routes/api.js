@@ -4,6 +4,8 @@ var express = require('express');
 var router = express.Router();
 var config = require('config');
 var dorita980 = require('dorita980');
+var restPackage = require('../package.json');
+var doritaPackage = require('dorita980/package.json');
 
 var blid = process.env.BLID || config.blid;
 var password = process.env.PASSWORD || config.password;
@@ -37,6 +39,35 @@ router.get('/', function (req, res) {
   res.send({
     version: '1.0.' + firmwareVersion}
   );
+});
+
+router.get('/info/version', function (req, res) {
+  res.send({
+    rest980: restPackage.version,
+    dorita980: doritaPackage.version,
+    node: process.version,
+    firmwareVersion: firmwareVersion
+  });
+});
+
+router.get('/info/protocol', function (req, res) {
+  res.send({
+    firmwareVersion: firmwareVersion,
+    protocol: firmwareVersion === 1 ? 'v1' : 'v2',
+    transport: firmwareVersion === 1 ? 'https-umi' : 'mqtt-tls',
+    keepAlive: keepAlive === 'yes',
+    robotIP: knownIP || null
+  });
+});
+
+router.get('/info/capabilities', function (req, res) {
+  res.send({
+    local: enableLocal === 'yes',
+    cloud: enableCloud === 'yes' && firmwareVersion !== 2,
+    state: firmwareVersion === 2,
+    keepAlive: keepAlive === 'yes',
+    missingInFirmware2: missingInFirmw2
+  });
 });
 
 /*

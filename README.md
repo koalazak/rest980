@@ -33,6 +33,14 @@ The service can be configured by editing `config/default.json` or by setting env
 
 *See [dorita980](https://github.com/koalazak/dorita980) for more information and instructions for obtaining your robot blid and password*
 
+### TLS and Cloud Overrides (env only)
+
+These are passed through to dorita980 and can help with newer Node.js versions or iRobot auth changes:
+
+- `ROBOT_TLS_LEGACY=0` to disable legacy TLS renegotiation
+- `ROBOT_CIPHERS` to provide a custom cipher list for MQTT/TLS
+- `GIGYA_API_KEY`, `GIGYA_BASE`, `IROBOT_HTTP_BASE`, `IROBOT_COUNTRY_CODE`, `IROBOT_DISCOVERY_URL` for cloud auth overrides
+
 
 
 ## Start API Server
@@ -70,6 +78,12 @@ docker build . -t koalazak/rest980
 
 Now you can make request to this server on port 3000.
 There are 2 main endpoints: `local` and `cloud`, mapped to [dorita980](https://github.com/koalazak/dorita980) local and cloud methods as well.
+
+### Info endpoints
+
+- `GET /api/info/version` (rest980 + dorita980 + Node versions, firmwareVersion)
+- `GET /api/info/protocol` (protocol/transport + keepAlive + robot IP)
+- `GET /api/info/capabilities` (local/cloud/state support flags)
 
 ## Error responses:
 HTTP status 500 and response:
@@ -284,4 +298,3 @@ Visiting  `http://serverIP:3000/map` with your browser you can play with this co
 [![iRobot Roomba 980 cleaning map using dorita980 lib](https://img.youtube.com/vi/XILvHFEX7TM/0.jpg)](https://www.youtube.com/watch?v=XILvHFEX7TM)
 
 Video: Realtime cleaning map
-
