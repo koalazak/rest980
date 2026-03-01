@@ -1,7 +1,6 @@
-# Use latest node
-FROM node:boron
+FROM node:20-bullseye
 
-MAINTAINER koalazak <zak.tux@gmail.com>
+LABEL maintainer="koalazak <zak.tux@gmail.com>"
 
 # Create app directory
 RUN mkdir -p /usr/src/app
@@ -28,6 +27,7 @@ ENV KEEP_ALIVE=
 ENV SSL_KEY_FILE=
 ENV SSL_CERT_FILE=
 ENV PORT=3000
+ENV DEBUG=rest980:*
 
 EXPOSE ${PORT}
 
