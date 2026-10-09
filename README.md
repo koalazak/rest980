@@ -113,6 +113,7 @@ Available actions:
 - stop
 - pause
 - dock
+- evac (empty the bin into the dock - firmware 2 robots with a bin-evacuation dock such as the Clean Base on i7+/s9+ only)
 - resume
 - cleanRoom
 

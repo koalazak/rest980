@@ -87,6 +87,7 @@ router.get('/local/action/start', map2dorita('local', 'start'));
 router.get('/local/action/stop', map2dorita('local', 'stop'));
 router.get('/local/action/pause', map2dorita('local', 'pause'));
 router.get('/local/action/dock', map2dorita('local', 'dock'));
+router.get('/local/action/evac', map2dorita('local', 'evac'));
 router.get('/local/action/resume', map2dorita('local', 'resume'));
 
 router.post('/local/action/cleanRoom', map2dorita('local', 'cleanRoom', true));
