@@ -6,6 +6,7 @@ var bodyParser = require('body-parser');
 
 var basicAuth = require('basic-auth');
 var config = require('config');
+var debug = require('debug')('rest980:server');
 
 var helloRoute = require('./routes/index');
 var apiRoute = require('./routes/api');
@@ -64,27 +65,18 @@ app.use(function (req, res, next) {
   next(err);
 });
 
-// error handlers
-
-// development error handler
-// will print stacktrace
-if (app.get('env') === 'development') {
-  app.use(function (err, req, res) {
-    res.status(err.status || 500);
-    res.send({
-      message: err.message,
-      error: err
-    });
-  });
-}
-
-// production error handler
-// no stacktraces leaked to user
-app.use(function (err, req, res) {
+// error handler (needs all 4 args, or Express won't treat it as one)
+app.use(function (err, req, res, next) {
+  if (res.headersSent) return next(err);
+  // map2dorita passes plain strings to next()
+  if (typeof err === 'string') err = new Error(err);
+  // the default handler used to print these, keep them visible (DEBUG=rest980:*)
+  if (!err.status || err.status >= 500) debug(err.stack);
   res.status(err.status || 500);
-  res.send({
+  res.json({
     message: err.message,
-    error: {}
+    // stacktrace only in development
+    error: app.get('env') === 'development' ? { stack: err.stack } : {}
   });
 });
 
