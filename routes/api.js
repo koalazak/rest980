@@ -180,7 +180,7 @@ function map2dorita (source, method, hasArgs) {
       return sendAndDisconnect(method, hasArgs ? req.body : undefined, res, next);
     }
     myRobot[source][method](hasArgs ? req.body : undefined).then(function (resp) {
-      res.send(resp);
+      res.json(resp);
     }).catch(next);
   };
 }
@@ -189,7 +189,7 @@ function sendAndDisconnect (method, args, res, next) {
   let client = new dorita980.Local(blid, password, knownIP, 2);
   client.on('connect', function () {
     client[method](args).then(function (resp) {
-      res.send(resp);
+      res.json(resp);
       client.end();
     }).catch(next);
   });
