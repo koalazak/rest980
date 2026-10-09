@@ -91,6 +91,10 @@ router.get('/local/action/resume', map2dorita('local', 'resume'));
 
 router.post('/local/action/cleanRoom', map2dorita('local', 'cleanRoom', true));
 
+if (firmwareVersion === 2) {
+  router.get('/local/action/find', map2dorita('local', 'find'));
+}
+
 router.get('/local/config/time', map2dorita('local', 'getTime'));
 router.post('/local/config/time', map2dorita('local', 'setTime', true));
 

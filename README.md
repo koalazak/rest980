@@ -115,6 +115,7 @@ Available actions:
 - dock
 - resume
 - cleanRoom
+- find (play the locator sound - firmware 2 only)
 
 Example: start to clean
 
