@@ -152,6 +152,7 @@ Available records:
 - sys
 - sku
 - state (only in firmware 2)
+- connection (state of the connection to the robot, see below)
 
 Example: get current mission variables
 ```http
@@ -173,6 +174,26 @@ Success Response:
      "sqft": 0 },
   "id": 2 }
 ```
+
+Example: check the connection to the robot
+```http
+GET http://192.168.1.110:3000/api/local/info/connection
+```
+Success Response:
+```
+{"local":"connected"}
+```
+
+The `local` value is one of:
+
+- connected (firmware 2, keepAlive: the connection to the robot is up)
+- disconnected (firmware 2, keepAlive: the connection is down, HTTP status 503)
+- initializing (the robot connection has not been created yet, HTTP status 503)
+- on-demand (firmware 2 with keepAlive disabled: a connection is made per request)
+- stateless (firmware 1: every request is a separate HTTPS call)
+- disabled (the local API is disabled by config)
+
+This endpoint does not talk to the robot, so it answers even when the robot is unreachable. The 503 statuses make it usable as a Docker `HEALTHCHECK`. Connection events and errors are logged when `DEBUG=rest980:robot` (or `rest980:*`) is set.
 
 ### Configurations
 

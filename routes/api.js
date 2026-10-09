@@ -1,6 +1,7 @@
 'use strict';
 
 var express = require('express');
+var debug = require('debug')('rest980:robot');
 var router = express.Router();
 var config = require('config');
 var dorita980 = require('dorita980');
@@ -30,7 +31,11 @@ handleIP(function (e, ip) {
   if (e) throw e;
   knownIP = ip;
   if (enableLocal === 'yes') {
-    if (firmwareVersion === 1 || (keepAlive === 'yes')) myRobot.local = new dorita980.Local(blid, password, ip, firmwareVersion);
+    if (firmwareVersion === 1 || (keepAlive === 'yes')) {
+      myRobot.local = new dorita980.Local(blid, password, ip, firmwareVersion);
+      // firmware 2 is a persistent mqtt connection, firmware 1 is plain https
+      if (firmwareVersion === 2) logConnection(myRobot.local, ip);
+    }
   }
   if (enableCloud === 'yes') myRobot.cloud = new dorita980.Cloud(blid, password, firmwareVersion);
 });
@@ -126,6 +131,28 @@ router.get('/local/info/lastwireless', map2dorita('local', 'getWirelessLastStatu
 router.get('/local/info/mission', map2dorita('local', 'getMission'));
 router.get('/local/info/sys', map2dorita('local', 'getSys'));
 
+// does not go through map2dorita, so it still answers when the robot is not ready
+router.get('/local/info/connection', function (req, res) {
+  var state;
+  var status = 200;
+  if (enableLocal === 'no') {
+    state = 'disabled';
+  } else if (firmwareVersion === 2 && keepAlive === 'no') {
+    state = 'on-demand';
+  } else if (!myRobot.local) {
+    state = 'initializing';
+    status = 503;
+  } else if (firmwareVersion === 1) {
+    state = 'stateless';
+  } else if (myRobot.local.connected) {
+    state = 'connected';
+  } else {
+    state = 'disconnected';
+    status = 503;
+  }
+  res.status(status).json({ local: state });
+});
+
 if (firmwareVersion === 2) {
   router.get('/local/info/state', map2dorita('local', 'getRobotState'));
 }
@@ -153,6 +180,18 @@ router.get('/cloud/action/off', map2dorita('cloud', 'off'));
 router.get('/cloud/action/fbeep', map2dorita('cloud', 'fbeep'));
 
 // helper:
+
+// dorita980 swallows the mqtt client's errors, so log them (DEBUG=rest980:robot)
+function logConnection (client, ip) {
+  ['connect', 'reconnect', 'offline', 'close'].forEach(function (event) {
+    client.on(event, function () {
+      debug('mqtt %s (%s)', event, ip);
+    });
+  });
+  client.on('error', function (e) {
+    debug('mqtt error: %s', e.message);
+  });
+}
 
 function map2dorita (source, method, hasArgs) {
   return function (req, res, next) {
