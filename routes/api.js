@@ -15,6 +15,7 @@ var firmwareVersion = parseInt((process.env.FIRMWARE_VERSION || config.firmwareV
 var enableLocal = process.env.ENABLE_LOCAL || config.enableLocal || 'yes';
 var enableCloud = process.env.ENABLE_CLOUD || config.enableCloud || 'yes';
 var keepAlive = process.env.KEEP_ALIVE || config.keepAlive || 'yes';
+var missionNoBin = process.env.MISSION_NO_BIN || config.missionNoBin || 'no';
 
 // Temporal:
 if (firmwareVersion === 2) enableCloud = 'no';
@@ -123,7 +124,7 @@ router.get('/local/config/preferences', map2dorita('local', 'getPreferences'));
 router.get('/local/info/sku', map2dorita('local', 'getSKU'));
 router.get('/local/info/wireless', map2dorita('local', 'getWirelessStatus'));
 router.get('/local/info/lastwireless', map2dorita('local', 'getWirelessLastStatus'));
-router.get('/local/info/mission', map2dorita('local', 'getMission'));
+router.get('/local/info/mission', map2dorita('local', (firmwareVersion === 2 && missionNoBin === 'yes') ? 'getMissionNoBin' : 'getMission'));
 router.get('/local/info/sys', map2dorita('local', 'getSys'));
 
 if (firmwareVersion === 2) {
@@ -179,7 +180,7 @@ function map2dorita (source, method, hasArgs) {
     if (keepAlive === 'no' && firmwareVersion === 2) {
       return sendAndDisconnect(method, hasArgs ? req.body : undefined, res, next);
     }
-    myRobot[source][method](hasArgs ? req.body : undefined).then(function (resp) {
+    callRobot(myRobot[source], method, hasArgs ? req.body : undefined).then(function (resp) {
       res.send(resp);
     }).catch(next);
   };
@@ -188,10 +189,25 @@ function map2dorita (source, method, hasArgs) {
 function sendAndDisconnect (method, args, res, next) {
   let client = new dorita980.Local(blid, password, knownIP, 2);
   client.on('connect', function () {
-    client[method](args).then(function (resp) {
+    callRobot(client, method, args).then(function (resp) {
       res.send(resp);
       client.end();
     }).catch(next);
+  });
+}
+
+// getMission waits for `bin`, which Braava mops never report, so on them it never answers (#86)
+function callRobot (client, method, args) {
+  if (method !== 'getMissionNoBin') return client[method](args);
+  return client.getRobotState(['cleanMissionStatus', 'batPct']).then(function (state) {
+    return {
+      cleanMissionStatus: state.cleanMissionStatus,
+      batPct: state.batPct,
+      bin: state.bin,
+      tankLvl: state.tankLvl,
+      detectedPad: state.detectedPad,
+      padWetness: state.padWetness
+    };
   });
 }
 

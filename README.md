@@ -26,6 +26,7 @@ The service can be configured by editing `config/default.json` or by setting env
 |enableLocal|ENABLE_LOCAL|*(optional)* Set to 'no' if you want to disable local API. Default 'yes'.|
 |enableCloud|ENABLE_CLOUD|*(optional)* Set to 'no' if you want to disable cloud API. Default 'yes'.|
 |keepAlive|KEEP_ALIVE|*(optional)* Set to 'no' if you want to connect and disconnect to the robot in each request (slow but leave the connection free for the official mobile app).|
+|missionNoBin|MISSION_NO_BIN|*(optional)* Set to 'yes' if your robot has no bin (Braava mops), otherwise `/api/local/info/mission` never answers. It then waits only for `cleanMissionStatus` and `batPct`, and also returns `tankLvl`, `detectedPad` and `padWetness` when the robot reports them. Firmware 2 only. Default 'no'.|
 |basicAuthUser|BASIC_AUTH_USER|*(optional)* Set to enable basic auth. Both user and pass must be set.|
 |basicAuthPass|BASIC_AUTH_PASS|*(optional)* Set to enable basic auth. Both user and pass must be set.|
 |sslKeyFile|SSL_KEY_FILE|*(optional)* Set path to key file to enable HTTPS. Both key and cert must be set. [(how to create self signed cert)](http://www.akadia.com/services/ssh_test_certificate.html)|
