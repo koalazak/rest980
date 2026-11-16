@@ -6,6 +6,7 @@ var yOffset = <%=mapvalues.offsetY%>;
 var sizeX = <%=mapvalues.sizeW%>;
 var sizeY = <%=mapvalues.sizeH%>;
 var updateEvery = <%=mapvalues.pointIntervalMs%>;
+var firmwareVersion = <%=firmwareVersion%>;
 
 </script>
 <div>
@@ -52,6 +53,6 @@ var updateEvery = <%=mapvalues.pointIntervalMs%>;
   y: <span class='data' id='y'></span><br/>
 </div>
 
-<script src="/js/map.js"></script>
+<script src="/js/<%=historyEnabled ? 'map-history' : 'map'%>.js"></script>
 
 <% include footer.ejs %>
