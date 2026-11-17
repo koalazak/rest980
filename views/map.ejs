@@ -1,4 +1,5 @@
 <% include header.ejs %>
+<% if (historyEnabled) { %><link rel="stylesheet" href="/css/map-dashboard.css"><% } %>
 <script type="text/javascript">
 
 var xOffset = <%=mapvalues.offsetX%>;
@@ -6,6 +7,7 @@ var yOffset = <%=mapvalues.offsetY%>;
 var sizeX = <%=mapvalues.sizeW%>;
 var sizeY = <%=mapvalues.sizeH%>;
 var updateEvery = <%=mapvalues.pointIntervalMs%>;
+var firmwareVersion = <%=firmwareVersion%>;
 
 </script>
 <div>
@@ -52,6 +54,14 @@ var updateEvery = <%=mapvalues.pointIntervalMs%>;
   y: <span class='data' id='y'></span><br/>
 </div>
 
-<script src="/js/map.js"></script>
+<% if (historyEnabled) { %>
+<script src="/js/map-replay.js"></script>
+<script src="/js/map-trajectory.js"></script>
+<script src="/js/map-coordinates.js"></script>
+<script src="/js/map-enhancements.js"></script>
+<script src="/js/map-dashboard.js"></script>
+<script src="/js/map-calibration.js"></script>
+<% } %>
+<script src="/js/<%=historyEnabled ? 'map-history' : 'map'%>.js"></script>
 
 <% include footer.ejs %>
