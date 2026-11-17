@@ -117,7 +117,7 @@ test('recorder observes one existing client and flushes pending state on disconn
   const recorder = mapHistory.createRecorder({ directory, firmwareVersion: 2, keepAlive: true, enableLocal: true });
   const client = new EventEmitter();
   const routes = {};
-  recorder.install({ get: (url, handler) => { routes[url] = handler; }, delete: (url, handler) => { routes[url] = handler; } });
+  recorder.install({ post () {}, get: (url, handler) => { routes[url] = handler; }, delete: (url, handler) => { routes[url] = handler; } });
   function call (query = {}) {
     const response = { statusCode: 200, set () {}, status (code) { this.statusCode = code; return this; }, json (data) { this.body = data; } };
     routes['/local/history/points']({ query }, response);

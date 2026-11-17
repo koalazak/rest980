@@ -375,3 +375,8 @@ Visiting  `http://serverIP:3000/map` with your browser you can play with this co
 [![iRobot Roomba 980 cleaning map using dorita980 lib](https://img.youtube.com/vi/XILvHFEX7TM/0.jpg)](https://www.youtube.com/watch?v=XILvHFEX7TM)
 
 Video: Realtime cleaning map
+
+
+### Map history enhancements
+
+See [map enhancement APIs and usage](docs/map-enhancements.md) for persistent display preferences and recorder diagnostics.

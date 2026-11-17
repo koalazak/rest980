@@ -26,15 +26,16 @@ function load (relative, overrides) {
   return module.exports;
 }
 
-function request (server, url, authorized = true, method = 'GET') {
+function request (server, url, authorized = true, method = 'GET', body) {
   return new Promise((resolve, reject) => {
     const headers = authorized ? { Authorization: 'Basic ' + Buffer.from('test:map-test').toString('base64') } : {};
+    headers['Content-Type'] = 'application/json';
     const outgoing = http.request({ host: '127.0.0.1', port: server.address().port, path: url, headers, method }, response => {
       let body = '';
       response.on('data', data => { body += data; });
       response.on('end', () => resolve({ status: response.statusCode, body, headers: response.headers }));
     }).on('error', reject);
-    outgoing.end();
+    outgoing.end(body === undefined ? undefined : JSON.stringify(body));
   });
 }
 
@@ -88,11 +89,22 @@ test('history shares existing authentication and connection; action and map rout
       assert.equal(response.status, 401);
       return request(server, '/api/local/history/points');
     })
-    .then(response => {
+    .then(async response => {
       assert.equal(response.status, 200);
       assert.equal(response.headers['cache-control'], 'no-store');
       assert.equal(JSON.parse(response.body).total, 1);
       missionId = JSON.parse(response.body).id;
+      const info = await request(server, '/api/local/history/enhancements');
+      assert.equal(info.status, 200); assert.ok(JSON.parse(info.body).features.includes('settings'));
+      assert.ok(!info.body.includes('test-password'));
+      const settings = JSON.parse(info.body).settings;
+      assert.equal((await request(server, '/api/local/history/enhancements/settings', true, 'POST', Object.assign({}, settings, { offsetX: 0, offsetY: -25 }))).status, 200);
+      assert.equal((await request(server, '/api/local/history/enhancements/settings', true, 'POST', { sizeW: 0 })).status, 400);
+      for (const [url, method] of [['', 'GET'], ['/settings', 'POST']]) {
+        assert.equal((await request(server, '/api/local/history/enhancements' + url, false, method, method === 'POST' ? {} : undefined)).status, 401);
+      }
+      assert.equal(client.listenerCount('state'), 1);
+
       assert.ok(!response.body.includes('test-password'));
       return request(server, '/api/local/history/points?after=invalid');
     })
