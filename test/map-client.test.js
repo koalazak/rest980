@@ -73,6 +73,8 @@ function browser (script, firmwareVersion = 2) {
     context.window = context; context.confirm = () => true; context.performance = { now: () => 0 };
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../public/js/map-replay.js'), 'utf8'), context);
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../public/js/map-trajectory.js'), 'utf8'), context);
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '../public/js/map-coordinates.js'), 'utf8'), context);
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '../public/js/map-calibration.js'), 'utf8'), context);
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../public/js/map-enhancements.js'), 'utf8'), context);
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../public/js/map-dashboard.js'), 'utf8'), context);
   }

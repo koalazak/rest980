@@ -1,4 +1,4 @@
-/* global $:true previewComparisonPoints:true previewDisplayState:true previewDrawComparison:true previewForgetMissions:true previewFrame:true previewLayoutPosition:true previewMapLayout:true previewMissionList:true previewNoteRequestEpoch:true previewReset:true previewSaveValues:true previewStartApp:true previewUpdate:true sizeX:true sizeY:true updateEvery:true xOffset:true yOffset:true */
+/* global $:true mapCalibration:true previewCalibratedPoint:true previewCalibrationBounds:true previewCalibrationProjection:true previewComparisonPoints:true previewDisplayState:true previewDrawComparison:true previewDrawOrigins:true previewForgetMissions:true previewFrame:true previewLayoutPosition:true previewMapLayout:true previewMissionList:true previewNoteRequestEpoch:true previewReset:true previewSaveValues:true previewStartApp:true previewUpdate:true sizeX:true sizeY:true updateEvery:true xOffset:true yOffset:true */
 /* eslint-env browser */
 /* eslint no-unused-vars: "off", no-global-assign: "off", no-native-reassign: "off" */
 /* global $ sizeX sizeY xOffset yOffset updateEvery */
@@ -152,6 +152,7 @@ function startMissionLoop () {
   if (Date.now() - listAt > 15000) refreshMissionList();
   var token = generation;
   var annotationEpoch = previewNoteRequestEpoch();
+  var calibrationEpoch = mapCalibration.epoch;
   var pending = $.ajax({
     url: '/api/local/history/points',
     dataType: 'json',
@@ -175,7 +176,7 @@ function startMissionLoop () {
     updateDeleteButton();
     if (Array.isArray(data.points)) points = points.concat(data.points);
     latestState = data.state || {};
-    previewUpdate(data, annotationEpoch);
+    previewUpdate(data, annotationEpoch, calibrationEpoch);
     previewDisplayState(data);
     renderMap();
     $('#historyInfo').text((missionId ? 'Server saved ' + data.total + ' points. ' : 'Waiting for a cleaning mission. ') +
@@ -244,10 +245,13 @@ function renderMap () {
   var pose = frame ? null : latestState.pose;
   var current = pose && pose.point ? { x: pose.point.x, y: pose.point.y, theta: pose.theta } : null;
   if (!validPosition(current)) current = visible[visible.length - 1];
-  var bounds = (frame ? frame.bounds.filter(validPosition) : visible).slice();
+  var bounds = (frame ? frame.bounds.filter(validPosition) : visible).map(previewCalibratedPoint);
   previewLayoutPosition(current, frame);
+  current = previewCalibratedPoint(current);
+  visible = visible.map(previewCalibratedPoint);
   if (current) bounds.push(current);
   bounds = bounds.concat(previewComparisonPoints());
+  bounds = previewCalibrationBounds(bounds);
   if (!bounds.length) return;
   var fit = document.getElementById('historyAutoFit');
   var minX = Infinity;
@@ -269,6 +273,8 @@ function renderMap () {
     }
     return { x: pathLayer.width - (point.y + Number(yOffset)), y: pathLayer.height - (point.x + Number(xOffset)) };
   }
+  previewCalibrationProjection(screen);
+  previewDrawOrigins(labelContext, screen);
   previewDrawComparison(pathContext, screen);
   pathContext.beginPath();
   pathContext.lineWidth = 1.5;

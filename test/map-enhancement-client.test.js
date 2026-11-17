@@ -27,6 +27,7 @@ function browser () {
     getAttribute (name) { return this.attributes[name]; }
     removeAttribute (name) { delete this.attributes[name]; }
     insertAdjacentElement () {}
+    getBoundingClientRect () { return { width: this.width, height: this.height, left: 0, top: 0 }; }
     set innerHTML (html) {
       for (const match of html.matchAll(/<[^>]*\bid="([^"]+)"[^>]*>/g)) {
         const element = new Element(match[1]);
@@ -84,7 +85,7 @@ function browser () {
   };
   context.window = context;
   vm.createContext(context);
-  vm.runInContext(['map-history', 'map-replay', 'map-trajectory', 'map-enhancements', 'map-dashboard'].map(name => fs.readFileSync(path.join(__dirname, '../public/js', name + '.js'), 'utf8')).join('\n'), context);
+  vm.runInContext(['map-history', 'map-replay', 'map-trajectory', 'map-coordinates', 'map-enhancements', 'map-dashboard', 'map-calibration'].map(name => fs.readFileSync(path.join(__dirname, '../public/js', name + '.js'), 'utf8')).join('\n'), context);
   return { context,
     elements,
     requests,
@@ -119,6 +120,150 @@ function data (id = 'm1-1000', start = 0, end = 4) {
     summary: { condition: 'ended', observedFrom: new Date(100000).toISOString(), reportedMinutes: 2, batteryLast: 80 },
     recorderStatus: { transport: 'connected', now: new Date(104000).toISOString(), lastSeen: new Date(103000).toISOString() } };
 }
+
+function calibrationPage (extra = {}) {
+  const page = browser(); page.bootstrap(['replay', 'compare', 'calibration']);
+  const pane = page.context.document.createElement('div'); page.context.previewCalibrationPane(pane);
+  page.context.previewCalibrationPolicyPane(pane);
+  ['layoutX', 'layoutY', 'layoutMapX', 'layoutMapY', 'layoutPositionMeta'].forEach(id => {
+    page.elements[id] = page.context.document.createElement('div');
+  });
+  const value = Object.assign({}, page.context.RoombaCoordinates.defaults, { revision: null, source: 'raw', autoDone: false, protectedManual: false });
+  const payload = Object.assign(data(), { calibration: value }, extra);
+  page.last('/api/local/history/points').resolve(payload);
+  return { page, payload, value };
+}
+
+test('opening an uncalibrated task suggests the displayed pose in the form without applying or saving it', () => {
+  const { page, payload } = calibrationPage({ state: { pose: { point: { x: -114, y: 150 }, theta: 92 } } });
+  const entry = page.context.mapCalibration.tasks['m1-1000'];
+  assert.equal(page.elements.calibrationOriginX.value, -114); assert.equal(page.elements.calibrationOriginY.value, 150);
+  assert.equal(entry.value.originX, 0); assert.equal(entry.dirty, false);
+  assert.equal(page.elements.layoutMapX.textContent, 'X -114');
+  assert.match(page.elements.calibrationStatus.textContent, /Auto-filled: /);
+  assert.match(page.elements.calibrationStatus.textContent, /not applied/);
+  page.context.latestState = { pose: { point: { x: 900, y: 800 }, theta: 90 } };
+  page.context.previewCalibrationReceive(payload);
+  assert.equal(page.elements.calibrationOriginX.value, -114, 'polling does not move an already suggested origin');
+  assert.equal(page.last('/api/local/history/enhancements/calibration/m1-1000'), undefined);
+  page.context.previewCalibrationSave('manual');
+  const request = page.last('/api/local/history/enhancements/calibration/m1-1000');
+  const body = JSON.parse(request.options.data);
+  assert.equal(body.originX, -114); assert.equal(body.originY, 150);
+  request.resolve(Object.assign({}, body, { revision: 'c'.repeat(32), source: 'manual' }));
+  page.context.previewCalibrationReceive(payload, 0);
+  assert.equal(entry.value.originX, -114); assert.equal(entry.suggestion, null);
+});
+
+test('saved calibrations including an explicit zero origin take precedence over automatic suggestions', () => {
+  const saved = { originX: 0,
+    originY: 0,
+    offsetX: 42,
+    offsetY: 0,
+    rotation: 10,
+    revision: 'd'.repeat(32),
+    source: 'raw',
+    autoDone: false,
+    protectedManual: true };
+  const { page } = calibrationPage({ calibration: saved, state: { pose: { point: { x: -114, y: 150 }, theta: 92 } } });
+  assert.equal(page.elements.calibrationOriginX.value, 0);
+  assert.equal(page.elements.calibrationOffsetX.value, 42);
+  assert.equal(page.context.mapCalibration.tasks['m1-1000'].suggestion, null);
+  assert.doesNotMatch(page.elements.calibrationStatus.textContent, /Auto-filled/);
+});
+
+test('suggestions wait for a valid position and do not overwrite edits', () => {
+  const { page, payload } = calibrationPage({ points: [], total: 0 });
+  const entry = page.context.mapCalibration.tasks['m1-1000'];
+  assert.equal(entry.suggestion, null);
+  page.context.latestState = { pose: { point: { x: 12, y: 34 }, theta: 90 } };
+  page.context.previewCalibrationReceive(payload);
+  assert.equal(page.elements.calibrationOriginX.value, 12);
+  page.elements.calibrationOriginX.value = '-70'; page.context.previewCalibrationEdit();
+  page.context.previewCalibrationReceive(payload); page.context.previewCalibrationFill();
+  assert.equal(page.elements.calibrationOriginX.value, -70); assert.equal(entry.dirty, true);
+});
+test('calibration previews separate raw/map coordinates and only saved transforms survive a reload', () => {
+  const { page, payload } = calibrationPage();
+  page.elements.calibrationOriginX.value = '10'; page.elements.calibrationOriginY.value = '5';
+  page.elements.calibrationOffsetX.value = '100'; page.elements.calibrationOffsetY.value = '-20';
+  page.elements.calibrationRotation.value = '0'; page.context.previewCalibrationEdit();
+  page.context.previewLayoutPosition({ x: 30, y: 15, theta: 90 }, null);
+  assert.equal(page.elements.layoutX.textContent, 'X 30'); assert.equal(page.elements.layoutMapX.textContent, 'X 120');
+  assert.equal(page.elements.layoutMapY.textContent, 'Y -10');
+  page.context.previewCalibrationReceive(payload);
+  assert.equal(page.context.previewCalibrationValue('m1-1000').offsetX, 100, 'polling preserves unsaved alignment');
+  page.context.previewCalibrationSave('manual');
+  const request = page.last('/api/local/history/enhancements/calibration/m1-1000');
+  assert.equal(JSON.parse(request.options.data).originX, 10);
+  const saved = Object.assign({}, JSON.parse(request.options.data), { revision: 'a'.repeat(32), source: 'manual' });
+  request.resolve(saved); assert.equal(page.context.mapCalibration.tasks['m1-1000'].dirty, false);
+  page.context.previewCalibrationReceive(payload, 0);
+  assert.equal(page.context.previewCalibrationValue('m1-1000').offsetX, 100, 'pre-save poll cannot revert a successful save');
+});
+test('independent comparison calibration, direct dragging and saved revisions do not alter primary raw data', () => {
+  const { page, value } = calibrationPage();
+  const comparison = Object.assign(data('m2-2000'), { calibration: Object.assign({}, value, { originX: 10, offsetX: 200 }) });
+  page.context.mapExtras.compare = { id: comparison.id, points: comparison.points };
+  page.context.previewCalibrationReceive(comparison);
+  assert.equal(page.context.previewComparisonPoints()[0].x, 190);
+  assert.equal(page.context.points[0].x, 0);
+  page.context.mapCalibration.dragMode = 'compare'; page.context.mapCalibration.target = 'compare';
+  page.context.previewCalibrationFill(); page.context.renderMap();
+  const drag = page.context.previewCalibrationDragBegin(); assert.equal(drag.id, 'm2-2000');
+  const original = drag.entry.value.offsetX;
+  page.context.previewCalibrationDragMove(drag, 20, 10);
+  assert.ok(Math.abs(drag.entry.value.offsetX - original - 10 / drag.unitX) <= 0.005);
+  assert.equal(page.context.previewCalibrationValue('m1-1000').offsetX, 0);
+  assert.equal(page.context.mapExtras.compare.points[0].x, 0);
+  assert.equal(drag.entry.dirty, true); assert.ok(page.context.mapCalibration.frozenBounds);
+  page.context.previewCalibrationSave('manual'); const request = page.last('/api/local/history/enhancements/calibration/m2-2000');
+  request.reject(409, 'revision conflict'); assert.equal(drag.entry.dirty, true);
+  assert.match(page.elements.previewMessage.textContent, /revision conflict/);
+});
+test('one-click zero fills the displayed raw pose as a draft, then saves only when requested', () => {
+  const { page, payload } = calibrationPage();
+  payload.state.pose = { point: { x: -114, y: 150 }, theta: 92 };
+  payload.calibrationStatus = { sample: null, policy: { enabled: false } };
+  page.context.latestState = payload.state;
+  const entry = page.context.mapCalibration.tasks['m1-1000'];
+  Object.assign(entry.value, { offsetX: 500, offsetY: -100, rotation: 30 });
+  page.context.previewCalibrationCurrent();
+  assert.equal(page.elements.calibrationOriginX.value, -114);
+  assert.equal(page.elements.calibrationOriginY.value, 150);
+  assert.equal(entry.value.offsetX, 0); assert.equal(entry.value.offsetY, 0); assert.equal(entry.value.rotation, 30);
+  assert.equal(page.elements.layoutMapX.textContent, 'X 0'); assert.equal(page.elements.layoutMapY.textContent, 'Y 0');
+  assert.match(page.elements.calibrationStatus.textContent, /may be cached/);
+  assert.match(page.elements.calibrationStatus.textContent, /Save calibration/);
+  assert.equal(page.last('/api/local/history/enhancements/calibration/m1-1000'), undefined);
+  page.context.previewCalibrationReceive(payload);
+  assert.equal(entry.value.originX, -114, 'polling cannot overwrite the filled draft');
+  page.context.previewCalibrationSave('manual');
+  const request = page.last('/api/local/history/enhancements/calibration/m1-1000');
+  const body = JSON.parse(request.options.data);
+  assert.equal(body.originX, -114); assert.equal(body.originY, 150); assert.equal(body.action, 'manual');
+  request.resolve(Object.assign({}, body, { revision: 'b'.repeat(32), source: 'manual' }));
+  assert.equal(entry.dirty, false);
+  page.context.enhancement.replay.seek(0.5); page.context.previewCalibrationCurrent();
+  assert.equal(entry.value.originX, 10); assert.equal(entry.value.originY, 5);
+  assert.equal(page.last('/api/local/history/enhancements/calibration/m1-1000'), request, 'playback also only creates a draft');
+  assert.ok(!page.requests.some(req => /\/action\//.test(req.options.url)));
+});
+
+test('zeroing a comparison fills only its last recorded point and handles absent positions', () => {
+  const { page, value } = calibrationPage();
+  page.context.mapCalibration.target = 'compare'; page.context.previewCalibrationCurrent();
+  assert.equal(page.context.mapCalibration.tasks['m1-1000'].dirty, false);
+  const comparison = Object.assign(data('m2-2000'), { calibration: value });
+  page.context.mapExtras.compare = { id: comparison.id, points: comparison.points };
+  page.context.previewCalibrationReceive(comparison);
+  page.context.previewCalibrationCurrent();
+  assert.equal(page.context.mapCalibration.tasks[comparison.id].value.originX, 30);
+  assert.equal(page.context.mapCalibration.tasks['m1-1000'].value.originX, 0);
+  page.context.mapExtras.compare.points = [];
+  page.context.previewCalibrationCurrent();
+  assert.match(page.elements.previewMessage.textContent, /No position is available for calibration/);
+});
 test('bootstrap applies server settings before first render and saves zero/negative values to new endpoint', () => {
   const page = browser(); page.bootstrap(['settings', 'summary', 'status']);
   assert.equal(page.elements.path_layer.width, 1200); assert.equal(page.context.xOffset, 0);

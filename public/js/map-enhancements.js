@@ -1,4 +1,4 @@
-/* global $:true RoombaReplay:true RoombaTrajectory:true dashboard:true deleting:true getValue:true latestState:true listAt:true listGeneration:true listRequest:true missionId:true pathLayer:true points:true previewDashboardInit:true previewDashboardMapLayout:true previewLayoutConnection:true previewLayoutData:true previewLayoutState:true refreshMissionList:true renderMap:true resetDisplayedMission:true restartLoop:true robotBodyLayer:true saveLegacyValues:true selectedMission:true sizeX:true sizeY:true startApp:true textLayer:true updateDeleteButton:true updateEvery:true updateState:true validPosition:true xOffset:true yOffset:true */
+/* global $:true RoombaCoordinates:true RoombaReplay:true RoombaTrajectory:true deleting:true getValue:true latestState:true listAt:true listGeneration:true listRequest:true mapCalibration:true mapExtras:true missionId:true pathLayer:true points:true previewCalibrationFill:true previewCalibrationForget:true previewCalibrationReceive:true previewCalibrationResetView:true previewCalibrationValue:true previewDashboardInit:true previewDashboardMapLayout:true previewLayoutConnection:true previewLayoutData:true previewLayoutState:true refreshMissionList:true renderMap:true resetDisplayedMission:true restartLoop:true robotBodyLayer:true saveLegacyValues:true selectedMission:true sizeX:true sizeY:true startApp:true textLayer:true updateDeleteButton:true updateEvery:true updateState:true validPosition:true xOffset:true yOffset:true */
 /* eslint-env browser */
 /* eslint no-unused-vars: "off", no-global-assign: "off", no-native-reassign: "off" */
 /* global $ sizeX sizeY xOffset yOffset updateEvery RoombaReplay */
@@ -22,6 +22,7 @@ function previewStartApp () {
       enhancement.features = data.features || [];
       enhancement.initialSettings = data.settings;
       enhancement.initialRetention = data.retention;
+      enhancement.initialCalibrationPolicy = data.calibrationPolicy;
       if (data.settings && previewHas('settings')) {
         sizeX = data.settings.sizeW; sizeY = data.settings.sizeH;
         xOffset = data.settings.offsetX; yOffset = data.settings.offsetY;
@@ -112,14 +113,16 @@ function previewSaveValues () {
     .fail(function (xhr) { previewMessage('Settings could not be saved: ' + previewError(xhr)); });
 }
 function previewReset () {
+  previewCalibrationResetView();
   previewExtrasReset();
   if (enhancement.replay) { enhancement.replay.id = null; enhancement.replay.setPoints(null, []); enhancement.replay.goLive(); }
   enhancement.lastData = null;
   previewText('previewSummary', ''); previewText('previewStatus', ''); previewReplayControls();
   previewLayoutState({}, null, {});
 }
-function previewUpdate (data, annotationEpoch) {
+function previewUpdate (data, annotationEpoch, calibrationEpoch) {
   enhancement.lastData = data;
+  previewCalibrationReceive(data, calibrationEpoch);
   if (enhancement.replay) enhancement.replay.setPoints(data.id, points);
   if (previewHas('summary') && data.summary) {
     var summary = data.summary;
@@ -329,7 +332,7 @@ function previewExtrasInit () {
   if (previewHas('compare')) {
     html += '<div><label>Comparison overlay <select id="extraCompare"><option value="">No overlay</option></select></label> ' +
     '<button id="extraReloadCompare" type="button">Refresh comparison</button> <span id="extraCompareStatus"></span>' +
-    '<div>Black: selected mission. Dashed orange: comparison snapshot. Overlays use original coordinates; differing origins may cause offsets.</div></div>';
+    '<div>Black: selected mission. Dashed orange: comparison snapshot. Each uses its own saved map coordinates.</div></div>';
   }
   if (previewHas('metrics')) {
     html += '<div id="extraMetrics"></div>' +
@@ -475,6 +478,7 @@ function previewCompareOptions () {
   else select.value = value;
 }
 function previewClearComparison () {
+  previewCalibrationResetView();
   mapExtras.compareGeneration++; mapExtras.compare = null;
   var pending = mapExtras.compareRequest; mapExtras.compareRequest = null;
   if (pending) pending.abort();
@@ -491,6 +495,7 @@ function previewLoadComparison () {
   }
   var token = mapExtras.compareGeneration;
   var primary = missionId;
+  var calibrationEpoch = mapCalibration.epoch;
   previewText('extraCompareStatus', 'Loading comparison...');
   var pending = $.ajax({ url: '/api/local/history/points', dataType: 'json', cache: false, timeout: 10000, data: { mission: id, after: 0 } });
   mapExtras.compareRequest = pending;
@@ -498,6 +503,7 @@ function previewLoadComparison () {
     if (token !== mapExtras.compareGeneration || missionId !== primary || deleting) return;
     if (data.id !== id || !Array.isArray(data.points)) { previewText('extraCompareStatus', 'The returned mission does not match. Retry.'); return; }
     mapExtras.compare = { id: id, points: data.points.filter(validPosition) };
+    previewCalibrationReceive(data, calibrationEpoch); previewCalibrationFill();
     previewText('extraCompareStatus', 'Dashed orange: ' + id + ' · ' + data.points.length + ' points (snapshot; refresh to update)');
     renderMap();
   }).fail(function (xhr, state) {
@@ -505,9 +511,14 @@ function previewLoadComparison () {
     previewText('extraCompareStatus', 'Comparison failed: ' + previewError(xhr)); renderMap();
   }).always(function () { if (mapExtras.compareRequest === pending) mapExtras.compareRequest = null; });
 }
-function previewComparisonPoints () { return mapExtras.compare ? mapExtras.compare.points : []; }
+function previewComparisonPoints () {
+  return mapExtras.compare ? mapExtras.compare.points.map(function (point) {
+    return RoombaCoordinates.apply(point, previewCalibrationValue(mapExtras.compare.id));
+  }) : [];
+}
 function previewNoteRequestEpoch () { return mapExtras.noteEpoch; }
 function previewForgetMissions (ids) {
+  previewCalibrationForget(ids);
   ids.forEach(function (id) { delete mapExtras.drafts[id]; });
   if (ids.indexOf(mapExtras.noteId) !== -1) mapExtras.dirty = false;
 }

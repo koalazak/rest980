@@ -74,6 +74,7 @@ test('history shares existing authentication and connection; action and map rout
   const server = http.createServer(app);
   function cleanup () {
     recorder.close();
+    assert.equal(client.listenerCount('update'), 0);
     server.close();
     fs.rmSync(directory, { recursive: true, force: true });
   }
@@ -100,16 +101,25 @@ test('history shares existing authentication and connection; action and map rout
       const settings = JSON.parse(info.body).settings;
       assert.equal((await request(server, '/api/local/history/enhancements/settings', true, 'POST', Object.assign({}, settings, { offsetX: 0, offsetY: -25 }))).status, 200);
       assert.equal((await request(server, '/api/local/history/enhancements/settings', true, 'POST', { sizeW: 0 })).status, 400);
-      for (const [url, method] of [['', 'GET'], ['/settings', 'POST'], ['/retention/plan', 'POST'], ['/retention/apply', 'POST'], ['/notes/m1-1', 'POST'], ['/export?mission=m1-1&format=json', 'GET']]) {
+      for (const [url, method] of [['', 'GET'], ['/settings', 'POST'], ['/retention/plan', 'POST'], ['/retention/apply', 'POST'], ['/notes/m1-1', 'POST'], ['/calibration/m1-1', 'GET'], ['/calibration/m1-1', 'POST'], ['/calibration-policy', 'POST'], ['/export?mission=m1-1&format=json', 'GET']]) {
         assert.equal((await request(server, '/api/local/history/enhancements' + url, false, method, method === 'POST' ? {} : undefined)).status, 401);
       }
       assert.equal(client.listenerCount('state'), 1);
 
+      assert.ok(JSON.parse(info.body).features.includes('calibration'));
+      assert.equal(JSON.parse(info.body).calibrationPolicy.enabled, false);
+      const calibrationURL = '/api/local/history/enhancements/calibration/' + missionId;
+      const rawCalibration = JSON.parse((await request(server, calibrationURL)).body);
+      const calibrated = await request(server, calibrationURL, true, 'POST', Object.assign({}, rawCalibration, { action: 'manual', originX: 10, originY: 20 }));
+      assert.equal(calibrated.status, 200);
+      assert.equal((await request(server, calibrationURL, true, 'POST', Object.assign({}, rawCalibration, { action: 'manual' }))).status, 409);
+      assert.equal((await request(server, '/api/local/history/enhancements/calibration-policy', true, 'POST', { enabled: false })).status, 200);
       const note = await request(server, '/api/local/history/enhancements/notes/' + missionId, true, 'POST', { title: 'Living room', note: 'Around the sofa', revision: null });
       assert.equal(note.status, 200);
       assert.equal((await request(server, '/api/local/history/enhancements/notes/' + missionId, true, 'POST', { title: 'stale', note: '', revision: null })).status, 409);
       const exported = await request(server, '/api/local/history/enhancements/export?mission=' + missionId + '&format=json');
       assert.equal(exported.status, 200); assert.equal(JSON.parse(exported.body).mission.title, 'Living room');
+      assert.equal(JSON.parse(exported.body).points[0].x, 10); assert.equal(JSON.parse(exported.body).mapPoints[0].x, 0);
       assert.ok(!exported.body.includes('test-password')); assert.match(exported.headers['content-disposition'], /attachment/);
       const csv = await request(server, '/api/local/history/enhancements/export?mission=' + missionId + '&format=csv');
       assert.equal(csv.status, 200); assert.match(csv.headers['content-type'], /^text\/csv/);

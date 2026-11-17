@@ -35,6 +35,8 @@ body.roomba-dashboard { margin:0!important; padding:0!important; background:#f3f
 .dash-toast:not(:empty) { padding:12px 16px; margin-bottom:16px; background:#eef7f5; color:#245e55; border:1px solid #cce5df; border-radius:9px; overflow-wrap:anywhere; }
 .dash-grid { display:grid; grid-template-columns:minmax(0,1fr) 340px; align-items:start; gap:20px; }
 .dash-main,.dash-sidebar { min-width:0; }
+.roomba-app .dash-sidebar { position:sticky; top:20px; max-height:calc(100vh - 40px); overflow-x:hidden; overflow-y:auto; scrollbar-gutter:stable; }
+.dash-sidebar .dash-tabs { position:sticky; top:0; z-index:2; background:white; }
 .dash-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-bottom:18px; }
 .dash-stat { border:1px solid #e0e7ec; border-radius:11px; background:white; padding:15px 17px; min-width:0; }
 .dash-stat-label { font-size:11px; color:#748694; margin-bottom:5px; }
@@ -43,6 +45,8 @@ body.roomba-dashboard { margin:0!important; padding:0!important; background:#f3f
 .dash-stat-foot { color:#8a99a4; font-size:10px; margin-top:5px; }
 .dash-coordinates { display:flex; flex-wrap:wrap; column-gap:14px; font-size:18px; letter-spacing:0; }
 .dash-coordinates span { white-space:nowrap; }
+.dash-map-coordinate-label { margin-top:8px; }
+.roomba-app .dash-map-tools .dash-drag-mode { width:auto; max-width:100%; padding:5px 8px; font-size:12px; }
 .dash-state { font-size:21px; overflow-wrap:anywhere; }
 .dash-system-dialog { width:min(680px,calc(100vw - 30px)); max-height:85vh; overflow:auto; border:1px solid #dce7eb; border-radius:16px; padding:24px; color:#243344; box-shadow:0 24px 80px #1e3f4a33; }
 .dash-system-dialog::backdrop { background:#122c4066; backdrop-filter:blur(3px); }
@@ -96,5 +100,5 @@ body.roomba-dashboard { margin:0!important; padding:0!important; background:#f3f
 .dash-raw { font-size:12px; line-height:1.95; color:#6e8390; overflow-wrap:anywhere; }
 .dash-raw #apiresponse { white-space:pre-wrap; max-height:200px; overflow:auto; font:11px/1.7 monospace; background:#f4f7f9; border-radius:6px; padding:8px; }
 .roomba-app a[aria-disabled=true] { pointer-events:none; opacity:.45; }
-@media(max-width:1100px) { .roomba-app { padding:20px; } .dash-grid { grid-template-columns:minmax(0,1fr); } .dash-sidebar { width:100%; } .dash-pane { max-width:none; } .dash-toolbar { align-items:stretch; flex-wrap:wrap; gap:15px; } .dash-task-select { max-width:none; flex-basis:100%; } .dash-map-viewport { height:clamp(340px,58vh,620px)!important; } }
+@media(max-width:1100px) { .roomba-app { padding:20px; } .dash-grid { grid-template-columns:minmax(0,1fr); } .roomba-app .dash-sidebar { width:100%; position:static; max-height:none; overflow:visible; } .dash-pane { max-width:none; } .dash-toolbar { align-items:stretch; flex-wrap:wrap; gap:15px; } .dash-task-select { max-width:none; flex-basis:100%; } .dash-map-viewport { height:clamp(340px,58vh,620px)!important; } }
 @media(max-width:560px) { .roomba-app { padding:15px 12px 28px; } .dash-header { margin-bottom:16px; align-items:start; } .roomba-app h1 { font-size:22px; } .dash-logo { width:39px; height:39px; border-radius:11px; } .dash-brand { gap:9px; } .dash-connection { font-size:10px; padding:6px 8px; gap:6px; } .dash-eyebrow { font-size:9px; } .dash-toolbar { padding:14px; margin-bottom:14px; } .dash-actions { gap:6px; width:100%; } .dash-actions button { flex:1 1 0; padding:9px 4px; font-size:12px; min-width:0; white-space:nowrap; } .dash-stats { grid-template-columns:1fr 1fr; gap:9px; margin-bottom:14px; } .dash-stat { padding:12px 14px; } .dash-stat-value { font-size:23px; } .dash-card-head { padding:13px 14px; } .dash-map-tools { gap:5px; } .dash-map-tools .dash-switch { flex-basis:100%; margin-bottom:3px; } .dash-map-viewport { height:clamp(300px,49vh,480px)!important; } .dash-legend { padding:10px 14px; gap:10px; } .dash-map-status { width:100%; margin:0; } .dash-playback { padding:12px 14px; } .dash-playback-row { gap:6px; } .dash-seek { order:5; flex-basis:100%; margin-top:6px; } .dash-pane { padding:17px 16px; } }

@@ -1,6 +1,7 @@
-/* global $:true clearMap:true deleting:true enhancement:true pathLayer:true previewComparisonPoints:true previewElement:true previewError:true previewHas:true previewLoadHistory:true previewMapLayout:true previewMessage:true previewStatus:true previewText:true request:true robotBodyLayer:true saveValues:true selectedMission:true text:true textLayer:true toggleMapping:true validPosition:true */
+/* global $:true clearMap:true enhancement:true pathLayer:true previewCalibratedPoint:true previewCalibrationControls:true previewCalibrationDragBegin:true previewCalibrationDragMove:true previewCalibrationDragTools:true previewCalibrationPane:true previewCalibrationPolicyPane:true previewCalibrationResetView:true previewComparisonPoints:true previewElement:true previewError:true previewHas:true previewLoadHistory:true previewMapLayout:true previewMessage:true previewStatus:true previewText:true renderMap:true request:true robotBodyLayer:true saveValues:true selectedMission:true text:true textLayer:true toggleMapping:true validPosition:true */
 /* eslint-env browser */
-/* eslint no-unused-vars: "off" */
+/* eslint no-unused-vars: "off", no-global-assign: "off", no-native-reassign: "off" */
+
 var dashboard = { ready: false, zoom: 1, viewport: null, stage: null, resize: null };
 function layoutNode (tag, className, html) {
   var node = document.createElement(tag); node.className = className || '';
@@ -43,7 +44,9 @@ function previewDashboardInit () {
     '<div class="dash-stat"><div class="dash-stat-label">Cleaning area</div><div class="dash-stat-value"><span id="layoutArea">—</span><small>m²</small></div><div class="dash-stat-foot">Reported by robot</div></div>' +
     '<div class="dash-stat"><div class="dash-stat-label">Last reported battery</div><div class="dash-stat-value"><span id="layoutBattery">—</span><small>%</small></div><div class="dash-stat-foot">Selected mission summary</div></div>' +
     '<div class="dash-stat"><div class="dash-stat-label">Saved coordinates</div><div class="dash-stat-value"><span id="layoutPoints">—</span><small>pts</small></div><div class="dash-stat-foot">Recorded on server</div></div>' +
-    '<div class="dash-stat"><div class="dash-stat-label">Position</div><div class="dash-stat-value dash-coordinates"><span id="layoutX">X —</span><span id="layoutY">Y —</span></div><div class="dash-stat-foot" id="layoutPositionMeta">No position available</div></div>' +
+    '<div class="dash-stat"><div class="dash-stat-label">Raw coordinates</div><div class="dash-stat-value dash-coordinates"><span id="layoutX">X —</span><span id="layoutY">Y —</span></div>' +
+    '<div class="dash-stat-label dash-map-coordinate-label">Map coordinates</div><div class="dash-stat-value dash-coordinates"><span id="layoutMapX">X —</span><span id="layoutMapY">Y —</span></div>' +
+    '<div class="dash-stat-foot" id="layoutPositionMeta">No position available</div></div>' +
     '<div class="dash-stat"><div class="dash-stat-label" id="layoutStateLabel">Current status</div><div class="dash-stat-value dash-state" id="layoutState">—</div><div class="dash-stat-foot" id="layoutStateMeta">Waiting for a state report</div></div></div>' +
     '<section class="dash-card"><div class="dash-card-head"><div class="dash-heading"><h2>Cleaning trajectory</h2><span class="dash-phase" id="layoutPhase">Waiting for a mission</span></div><div class="dash-map-tools" id="layoutMapTools"></div></div>' +
     '<div class="dash-map-viewport" id="layoutMapViewport" aria-label="Map viewport; zoom and pan to explore" tabindex="0"><div class="dash-map-stage" id="layoutMapStage"></div></div>' +
@@ -72,8 +75,9 @@ function previewDashboardInit () {
   var tools = previewElement('layoutMapTools');
   var auto = layoutNode('label', 'dash-switch'); layoutMove(auto, 'historyAutoFit'); auto.appendChild(document.createTextNode('Fit trajectory')); tools.appendChild(auto);
   layoutButton(tools, '−', function () { previewMapZoom(dashboard.zoom / 1.5); }, '', 'Zoom out');
-  layoutButton(tools, 'Fit viewport', function () { dashboard.zoom = 1; previewMapLayout(); }, '', 'Fit the complete canvas in the viewport');
+  layoutButton(tools, 'Fit viewport', function () { previewCalibrationResetView(); dashboard.zoom = 1; renderMap(); }, '', 'Fit the complete canvas in the viewport');
   layoutButton(tools, '+', function () { previewMapZoom(dashboard.zoom * 1.5); }, '', 'Zoom in');
+  previewCalibrationDragTools(tools);
   dashboard.viewport = previewElement('layoutMapViewport'); dashboard.stage = previewElement('layoutMapStage');
   previewMapGestures(dashboard.viewport);
   [pathLayer, robotBodyLayer, textLayer].forEach(function (canvas) { dashboard.stage.appendChild(canvas); });
@@ -122,8 +126,9 @@ function layoutTaskPane () {
     var compare = layoutSection(pane, 'Compare trajectories'); layoutField(compare, 'Overlay another mission', 'extraCompare');
     var refresh = layoutMove(compare, 'extraReloadCompare'); if (refresh) refresh.textContent = 'Refresh comparison';
     var status = layoutMove(compare, 'extraCompareStatus'); if (status) status.className = 'dash-small';
-    var hint = layoutNode('p', 'dash-small'); hint.textContent = 'Dashed orange lines show a comparison snapshot. Position origins may differ between missions.'; compare.appendChild(hint);
+    var hint = layoutNode('p', 'dash-small'); hint.textContent = 'Dashed orange lines show the comparison snapshot. Adjust origins, placement and rotation independently to align missions.'; compare.appendChild(hint);
   }
+  previewCalibrationPane(pane);
   var exports = layoutSection(pane, 'Export and display'); var links = layoutNode('div', 'dash-button-row'); exports.appendChild(links);
   ['download', 'extraJSON', 'extraCSV'].forEach(function (id) {
     var link = layoutMove(links, id); if (!link) return;
@@ -168,7 +173,7 @@ function layoutHistoryPane () {
   var danger = layoutSection(pane, 'Selected mission'); var remove = layoutMove(danger, 'historyDelete'); if (remove) { remove.className = 'dash-danger'; remove.textContent = 'Delete selected mission…'; }
 }
 function layoutSettingsPane () {
-  var pane = previewElement('layoutPaneSettings'); var section = layoutSection(pane, 'Canvas and refresh');
+  var pane = previewElement('layoutPaneSettings'); previewCalibrationPolicyPane(pane); var section = layoutSection(pane, 'Canvas and refresh');
   var sizes = layoutNode('div', 'dash-pair'); section.appendChild(sizes); layoutField(sizes, 'Canvas width', 'sizew'); layoutField(sizes, 'Canvas height', 'sizeh');
   var offsets = layoutNode('div', 'dash-pair'); section.appendChild(offsets); layoutField(offsets, 'X offset', 'offsetx'); layoutField(offsets, 'Y offset', 'offsety');
   layoutField(section, 'Refresh interval (ms)', 'updateevery');
@@ -230,8 +235,12 @@ function previewLayoutPosition (position, frame) {
   function coordinate (value) { return Number(value.toFixed(2)).toLocaleString(); }
   previewText('layoutX', 'X ' + (valid ? coordinate(position.x) : '—'));
   previewText('layoutY', 'Y ' + (valid ? coordinate(position.y) : '—'));
+  var mapped = valid ? previewCalibratedPoint(position) : null;
+  previewText('layoutMapX', 'X ' + (mapped ? coordinate(mapped.x) : '—'));
+  previewText('layoutMapY', 'Y ' + (mapped ? coordinate(mapped.y) : '—'));
   previewText('layoutPositionMeta', valid ? (frame ? 'Playback position' : selectedMission === 'latest' ? 'Last reported position' : 'Last mission position') +
-    ' · heading ' + coordinate(position.theta) + '°' : 'No position available');
+    ' · raw heading ' + coordinate(position.theta) + ' degrees / map heading ' + coordinate(mapped.theta) + '°' : 'No position available');
+  previewCalibrationControls();
 }
 function previewMapAnchor (x, y) {
   var viewport = dashboard.viewport;
@@ -266,7 +275,11 @@ function previewMapGestures (viewport) {
       var center = pair(); gesture = { pinch: true, distance: Math.max(1, center.distance), zoom: dashboard.zoom, anchor: previewMapAnchor(center.x, center.y) };
     } else if (pointers.size) {
       var point = Array.from(pointers.values())[0];
-      gesture = { x: point.x, y: point.y, left: viewport.scrollLeft, top: viewport.scrollTop };
+      gesture = { x: point.x,
+        y: point.y,
+        left: viewport.scrollLeft,
+        top: viewport.scrollTop,
+        track: previewCalibrationDragBegin() };
     } else gesture = null;
     viewport.classList.toggle('is-dragging', pointers.size > 0);
   }
@@ -285,6 +298,8 @@ function previewMapGestures (viewport) {
     pointers.set(event.pointerId, local(event));
     if (gesture.pinch && pointers.size >= 2) {
       var center = pair(); previewMapZoom(gesture.zoom * center.distance / gesture.distance, center.x, center.y, gesture.anchor);
+    } else if (gesture.track) {
+      var cursor = local(event); previewCalibrationDragMove(gesture.track, cursor.x - gesture.x, cursor.y - gesture.y);
     } else {
       var point = local(event); viewport.scrollLeft = gesture.left - (point.x - gesture.x); viewport.scrollTop = gesture.top - (point.y - gesture.y);
     }
