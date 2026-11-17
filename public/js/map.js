@@ -1,4 +1,5 @@
-/*  global $ alert sizeX sizeY xOffset yOffset updateEvery */
+/*  global $ alert sizeX sizeY xOffset yOffset updateEvery firmwareVersion */
+/* eslint-env browser */
 /*  eslint no-unused-vars: "off" */
 /*  eslint no-global-assign: "off" */
 /*  eslint no-native-reassign: "off" */
@@ -37,8 +38,6 @@ function startApp () {
   $('#offsety').val(yOffset);
 
   $('#updateevery').val(updateEvery);
-  startMissionLoop();
-
   pathLayerContext = pathLayer.getContext('2d');
   robotBodyLayerContext = robotBodyLayer.getContext('2d');
   textLayerContext = textLayer.getContext('2d');
@@ -47,29 +46,69 @@ function startApp () {
   pathLayerContext.lineWidth = 1;
   pathLayerContext.strokeStyle = '#000000';
   pathLayerContext.lineCap = 'round';
+  startMissionLoop();
 }
 
+// Firmware 2 mission responses omit pose; use the complete state instead.
+var missionRequest = null;
+var missionTimer = null;
+
 function startMissionLoop () {
-  if (mapping) {
-    $('#mapStatus').html('getting point...');
-    $.get('/api/local/info/mission', function (data) {
-      messageHandler(data);
-      setTimeout(startMissionLoop, updateEvery);
-    });
-  } else {
-    $('#mapStatus').html('stopped');
+  if (!mapping) {
+    $('#mapStatus').text('stopped');
+    return;
   }
+  if (missionRequest) return;
+  clearTimeout(missionTimer);
+  $('#mapStatus').text('getting point...');
+  missionRequest = $.ajax({
+    url: firmwareVersion === 2 ? '/api/local/info/state' : '/api/local/info/mission',
+    dataType: 'json',
+    timeout: 10000
+  });
+  missionRequest.done(function (data) {
+    if (!mapping) return;
+    try {
+      if (data && (data.cleanMissionStatus || data.ok)) {
+        messageHandler(data);
+      } else {
+        $('#mapStatus').text('waiting for robot status...');
+      }
+    } catch (error) {
+      $('#mapStatus').text('waiting for robot position: ' + error.message);
+    }
+  });
+  missionRequest.fail(function () {
+    if (mapping) $('#mapStatus').text('status request failed; retrying...');
+  });
+  missionRequest.always(function () {
+    missionRequest = null;
+    if (mapping) {
+      missionTimer = setTimeout(startMissionLoop, Math.max(200, Number(updateEvery) || 800));
+    } else {
+      $('#mapStatus').text('stopped');
+    }
+  });
 }
 
 function messageHandler (msg) {
-  // msg is the object returned by dorita980.getMission() promise.
+  // Firmware 1 returns {ok: ...}; firmware 2 supplies the complete MQTT state.
   if (msg.cleanMissionStatus) {
     // firmware version 2
-    msg.ok = msg.cleanMissionStatus;
+    msg.ok = Object.assign({}, msg.cleanMissionStatus);
     msg.ok.pos = msg.pose;
     msg.ok.batPct = msg.batPct;
-    $('#bin').html(msg.bin.present);
+    $('#bin').text(msg.bin && msg.bin.present);
     $('#nMssn').html(msg.ok.nMssn);
+  }
+  if (!msg.ok || !msg.ok.pos || !msg.ok.pos.point) {
+    $('#mapStatus').text('waiting for robot position...');
+    return;
+  }
+  var position = msg.ok.pos;
+  if (firmwareVersion === 2 && ![position.point.x, position.point.y, position.theta].every(Number.isFinite)) {
+    $('#mapStatus').text('waiting for valid robot coordinates...');
+    return;
   }
   msg.ok.time = new Date().toISOString();
   $('#mapStatus').html('drawing...');
@@ -98,7 +137,7 @@ function messageHandler (msg) {
 }
 
 function drawStep (x, y, theta, cycle, phase) {
-  if (phase === 'charge') {
+  if (firmwareVersion === 1 && phase === 'charge') {
     // hack (getMission() dont send x,y if phase is diferent as run)
     x = 0;
     y = 0;
@@ -161,6 +200,7 @@ function clearMap () {
 function toggleMapping () {
   mapping = !mapping;
   if (mapping) startMissionLoop();
+  else clearTimeout(missionTimer);
 }
 
 function getValue (name, actual) {
