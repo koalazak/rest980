@@ -100,7 +100,7 @@ test('history shares existing authentication and connection; action and map rout
       const settings = JSON.parse(info.body).settings;
       assert.equal((await request(server, '/api/local/history/enhancements/settings', true, 'POST', Object.assign({}, settings, { offsetX: 0, offsetY: -25 }))).status, 200);
       assert.equal((await request(server, '/api/local/history/enhancements/settings', true, 'POST', { sizeW: 0 })).status, 400);
-      for (const [url, method] of [['', 'GET'], ['/settings', 'POST'], ['/retention/plan', 'POST'], ['/retention/apply', 'POST']]) {
+      for (const [url, method] of [['', 'GET'], ['/settings', 'POST'], ['/retention/plan', 'POST'], ['/retention/apply', 'POST'], ['/notes/m1-1', 'POST'], ['/export?mission=m1-1&format=json', 'GET']]) {
         assert.equal((await request(server, '/api/local/history/enhancements' + url, false, method, method === 'POST' ? {} : undefined)).status, 401);
       }
       assert.equal(client.listenerCount('state'), 1);
