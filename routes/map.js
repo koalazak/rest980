@@ -2,10 +2,18 @@ var express = require('express');
 var router = express.Router();
 var jsonfile = require('jsonfile');
 var valuesPath = './config/mapvalues.json';
+var config = require('config');
+var mapHistory = require('../lib/map-history');
+var settings = mapHistory.settingsFrom(config, process.env);
 
 router.get('/', function (req, res) {
   var mapvalues = jsonfile.readFileSync(valuesPath);
-  res.render('map', {title: 'Map (experimental)', mapvalues: mapvalues});
+  res.render('map', {
+    title: 'Map (experimental)',
+    mapvalues: mapvalues,
+    firmwareVersion: settings.firmwareVersion,
+    historyEnabled: mapHistory.isEnabled(settings)
+  });
 });
 
 router.post('/values', function (req, res) {

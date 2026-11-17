@@ -26,6 +26,7 @@ The service can be configured by editing `config/default.json` or by setting env
 |enableLocal|ENABLE_LOCAL|*(optional)* Set to 'no' if you want to disable local API. Default 'yes'.|
 |enableCloud|ENABLE_CLOUD|*(optional)* Set to 'no' if you want to disable cloud API. Default 'yes'.|
 |keepAlive|KEEP_ALIVE|*(optional)* Set to 'no' if you want to connect and disconnect to the robot in each request (slow but leave the connection free for the official mobile app).|
+|mapHistoryDirectory|MAP_HISTORY_DIRECTORY|*(optional, disabled by default)* Directory for persistent map trajectories. Requires `firmwareVersion: 2`, `keepAlive: "yes"` and `enableLocal: "yes"`. See [Map history](#map-history).|
 |basicAuthUser|BASIC_AUTH_USER|*(optional)* Set to enable basic auth. Both user and pass must be set.|
 |basicAuthPass|BASIC_AUTH_PASS|*(optional)* Set to enable basic auth. Both user and pass must be set.|
 |sslKeyFile|SSL_KEY_FILE|*(optional)* Set path to key file to enable HTTPS. Both key and cert must be set. [(how to create self signed cert)](http://www.akadia.com/services/ssh_test_certificate.html)|
@@ -83,6 +84,72 @@ I would strongly suggest to edit also "config/default.json" with your iRobot par
 chmod +x dockerCreate.sh # If no privilages messagee appears
 ./dockerCreate.sh
 ```
+
+## Map history
+
+The experimental `/map` page uses the full local state for firmware 2, because
+`getMission()` does not include `pose` in dorita980 4. Missing coordinates and
+temporary request failures are retried. Firmware 1 keeps using its mission API.
+
+To keep trajectories across page reloads and server restarts, add a writable
+directory to `config/local.json` (or set `MAP_HISTORY_DIRECTORY`):
+
+```json
+{
+  "firmwareVersion": 2,
+  "enableLocal": "yes",
+  "keepAlive": "yes",
+  "mapHistoryDirectory": "/data/map-history"
+}
+```
+
+For Docker, bind-mount a host directory to `/data/map-history` with read/write
+access, for example `-v /path/on/host/roomba-history:/data/map-history`. Rebuild
+the image from this source to include the feature. No extra port or separate
+robot connection is required. Leave `mapHistoryDirectory` empty to disable it.
+
+The recorder observes the existing local MQTT connection while rest980 runs,
+including when no browser is open. Each mission is saved separately using the
+robot's `nMssn` counter. The page can replay previous missions, fit the display
+to the trajectory, and export the displayed image. **Pause display** and
+**Clear display** affect only the browser; they do not stop recording or delete
+history. Start/Pause/Resume/Dock/Stop remain robot commands.
+
+Select a recorded mission and choose **Delete selected mission** to permanently
+remove its saved trajectory after confirmation. An active mission, including a
+mid-mission recharge, cannot be deleted until it finishes. Deleting the most
+recent completed mission switches to the previous saved mission. Deleted maps
+remain deleted across reloads and restarts.
+
+Only received positions can be recorded: earlier trajectories and server or
+robot disconnection gaps cannot be recovered. Reconnection starts a new line
+segment instead of drawing a line across missing data. The robot must report a
+valid `pose`; this is a trajectory display, not room segmentation or a floor plan.
+
+History consists of per-mission JSON metadata and append-only JSONL coordinates,
+plus a `current.json` pointer. A small `.deleted` marker records deletion intent
+so interrupted cleanup cannot resurrect a deleted map. Back up the entire
+directory. History is not automatically deleted; use the page's delete button
+to remove individual recordings. The recorder stores only mapping
+state, not robot passwords or Wi-Fi configuration. Write failures are reported
+without stopping robot controls; abrupt power loss or disk failure can still
+lose recent data.
+
+History endpoints use the existing API authentication:
+
+- `GET /api/local/history`: mission summaries, latest mission ID and connection status.
+- `GET /api/local/history/points?mission=latest`: full trajectory and display state.
+  `mission` can also be a mission ID from the list. Add `known=<id>&after=<count>`
+  to request only points after a previously received count. A changed mission
+  returns the full trajectory with `reset: true`. Invalid IDs/cursors return 400;
+  unknown missions return 404. Disabled/unavailable history returns 503.
+- `DELETE /api/local/history/<id>`: permanently delete one saved trajectory.
+  An explicit mission ID is required; the `latest` alias is rejected. Active
+  missions return 409. Repeating a successful exact-ID deletion is safe.
+
+History is opt-in and inherits the same exposure as the existing API. Use
+`basicAuthUser`/`basicAuthPass` and appropriate network access controls when needed.
+Run `npm run test:map` for mapping regression tests without connecting to a robot.
 
 ## API documentation
 
@@ -308,3 +375,8 @@ Visiting  `http://serverIP:3000/map` with your browser you can play with this co
 [![iRobot Roomba 980 cleaning map using dorita980 lib](https://img.youtube.com/vi/XILvHFEX7TM/0.jpg)](https://www.youtube.com/watch?v=XILvHFEX7TM)
 
 Video: Realtime cleaning map
+
+
+### Map history enhancements
+
+See [map enhancement APIs and usage](docs/map-enhancements.md) for persistent display preferences and recorder diagnostics, confirmed batch deletion and opt-in retention, mission notes, exports and trajectory analysis.
