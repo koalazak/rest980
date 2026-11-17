@@ -10,5 +10,6 @@
   "basicAuthUser": null,
   "basicAuthPass": null,
   "sslKeyFile": null,
-  "sslCertFile": null
+  "sslCertFile": null,
+  "mapHistoryDirectory": ""
 }

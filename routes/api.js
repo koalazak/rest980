@@ -4,6 +4,7 @@ var express = require('express');
 var router = express.Router();
 var config = require('config');
 var dorita980 = require('dorita980');
+var mapHistory = require('../lib/map-history');
 var restPackage = require('../package.json');
 var doritaPackage = require('dorita980/package.json');
 
@@ -23,6 +24,9 @@ if (!blid || !password) {
   throw new Error('Config not found. Please edit config/default.json file with your robot credentials. Or set BLID, PASSWORD and ROBOT_IP enviroment variables.');
 }
 
+var historyRecorder = mapHistory.createRecorder(mapHistory.settingsFrom(config, process.env));
+historyRecorder.install(router);
+
 var myRobot = {};
 
 var handleIP = (robotIP || enableLocal === 'no') ? function (cb) { cb(null, robotIP); } : dorita980.getRobotIP;
@@ -30,7 +34,10 @@ handleIP(function (e, ip) {
   if (e) throw e;
   knownIP = ip;
   if (enableLocal === 'yes') {
-    if (firmwareVersion === 1 || (keepAlive === 'yes')) myRobot.local = new dorita980.Local(blid, password, ip, firmwareVersion);
+    if (firmwareVersion === 1 || (keepAlive === 'yes')) {
+      myRobot.local = new dorita980.Local(blid, password, ip, firmwareVersion);
+      historyRecorder.attach(myRobot.local);
+    }
   }
   if (enableCloud === 'yes') myRobot.cloud = new dorita980.Cloud(blid, password, firmwareVersion);
 });
