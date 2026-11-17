@@ -17,3 +17,7 @@ Authenticated GET/POST `/api/local/history/enhancements/notes/:id` reads/saves a
 ## Timestamp playback and mission library controls
 
 The history map now restores server display preferences and provides timestamp-based playback, speed/seek controls, mission titles/notes, text/date/status filters, comparison snapshots, PNG/JSON/CSV exports and confirmed cleanup controls. Playback never changes the recording cursor. Battery/area remain mission summaries, not fabricated per-frame samples. Draft edits survive polling and switching missions within the current page; unsaved drafts do not survive reloads.
+
+## Responsive map dashboard and navigation
+
+The history page groups six summary cards, map/playback controls and task/history/settings tabs. Position and status follow playback and are labelled as historical when appropriate. The read-only Test button displays `/api/local/info/sys` in a modal. The map defaults to fitting its bounded viewport; buttons/wheel zoom up to 6×, left drag pans, and touch supports pinch zoom and one-finger pan. Use Fit viewport to reset. The page remains scrollable outside the map. Delete controls are in the History tab. The firmware 1/non-history page keeps its existing layout.

@@ -1,0 +1,100 @@
+body.roomba-dashboard { margin:0!important; padding:0!important; background:#f3f6f8; color:#243344; font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif; }
+.roomba-app,.roomba-app * { box-sizing:border-box; }
+.roomba-app { max-width:1540px; margin:0 auto; padding:26px 30px 40px; }
+.roomba-app button,.roomba-app input,.roomba-app select,.roomba-app textarea { font:inherit; }
+.roomba-app button,.roomba-app .dash-link { border:1px solid #d9e1e7; border-radius:8px; padding:8px 12px; background:#fff; color:#344357; cursor:pointer; text-decoration:none; box-shadow:none; white-space:normal; line-height:1.45; }
+.roomba-app button:hover,.roomba-app .dash-link:hover { background:#f0f5f7; border-color:#b9c9d2; }
+.roomba-app button:disabled { opacity:.45; cursor:not-allowed; }
+.roomba-app button:focus-visible,.roomba-app a:focus-visible,.roomba-app input:focus-visible,.roomba-app select:focus-visible,.roomba-app textarea:focus-visible { outline:3px solid #83ccc4; outline-offset:2px; }
+.roomba-app .dash-primary { background:#087f73; border-color:#087f73; color:#fff; font-weight:600; }
+.roomba-app .dash-primary:hover { background:#076e64; color:#fff; border-color:#076e64; }
+.roomba-app .dash-danger { color:#b43b43; background:#fff7f7; border-color:#f0d5d7; }
+.roomba-app .dash-danger:hover { background:#fcecee; border-color:#dbaeb3; }
+.roomba-app input:not([type=checkbox]):not([type=range]),.roomba-app select,.roomba-app textarea { width:100%; min-width:0; border:1px solid #d5dfe5; border-radius:7px; padding:8px 10px; background:#fff; color:#26394a; height:auto; }
+.roomba-app input[type=checkbox] { width:16px; height:16px; margin:0; accent-color:#087f73; vertical-align:middle; }
+.roomba-app input[type=range] { accent-color:#087f73; width:100%!important; min-width:50px; }
+.roomba-app textarea { resize:vertical; min-height:94px; }
+.dash-header { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:22px; }
+.dash-brand { display:flex; align-items:center; gap:13px; }
+.dash-logo { display:grid; place-items:center; width:46px; height:46px; background:#e0f1ed; color:#087f73; border-radius:14px; flex:none; }
+.dash-eyebrow { font-size:11px; color:#7a8b98; text-transform:uppercase; letter-spacing:1.7px; font-weight:600; }
+.roomba-app h1 { margin:0; font-size:25px; line-height:1.35; font-weight:650; letter-spacing:-.5px; }
+.roomba-app h2 { margin:0; font-size:16px; font-weight:650; line-height:1.5; }
+.roomba-app h3 { margin:0 0 12px; font-size:13px; font-weight:650; color:#33495b; }
+.dash-muted { color:#788997; font-size:12px; }
+.dash-connection { display:flex; align-items:center; gap:8px; background:#fff; border:1px solid #e0e7eb; padding:8px 12px; border-radius:24px; font-size:12px; color:#647785; }
+.dash-dot { width:7px; height:7px; background:#adb9c1; border-radius:50%; flex:none; }
+.dash-connection[data-state=online] .dash-dot { background:#159e7c; box-shadow:0 0 0 3px #e0f6ec; }
+.dash-connection[data-state=offline] .dash-dot { background:#d49a43; }
+.dash-toolbar { display:flex; align-items:end; gap:20px; justify-content:space-between; padding:18px 20px; border:1px solid #e0e7ec; border-radius:13px; background:white; margin-bottom:20px; }
+.dash-task-select { min-width:0; flex:1; max-width:620px; }
+.dash-field { display:flex; flex-direction:column; gap:6px; margin:0 0 14px; font-size:12px; font-weight:500; color:#657a89; min-width:0; }
+.dash-task-select label { display:block; margin:0 0 6px; color:#718390; font-size:11px; font-weight:600; }
+.dash-task-select select { font-size:14px; }
+.dash-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.dash-toast:not(:empty) { padding:12px 16px; margin-bottom:16px; background:#eef7f5; color:#245e55; border:1px solid #cce5df; border-radius:9px; overflow-wrap:anywhere; }
+.dash-grid { display:grid; grid-template-columns:minmax(0,1fr) 340px; align-items:start; gap:20px; }
+.dash-main,.dash-sidebar { min-width:0; }
+.dash-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-bottom:18px; }
+.dash-stat { border:1px solid #e0e7ec; border-radius:11px; background:white; padding:15px 17px; min-width:0; }
+.dash-stat-label { font-size:11px; color:#748694; margin-bottom:5px; }
+.dash-stat-value { font-size:25px; line-height:1.35; letter-spacing:-.7px; font-weight:620; color:#1e3f4a; }
+.dash-stat-value small { font-size:12px; font-weight:400; letter-spacing:0; color:#8a99a4; margin-left:4px; }
+.dash-stat-foot { color:#8a99a4; font-size:10px; margin-top:5px; }
+.dash-coordinates { display:flex; flex-wrap:wrap; column-gap:14px; font-size:18px; letter-spacing:0; }
+.dash-coordinates span { white-space:nowrap; }
+.dash-state { font-size:21px; overflow-wrap:anywhere; }
+.dash-system-dialog { width:min(680px,calc(100vw - 30px)); max-height:85vh; overflow:auto; border:1px solid #dce7eb; border-radius:16px; padding:24px; color:#243344; box-shadow:0 24px 80px #1e3f4a33; }
+.dash-system-dialog::backdrop { background:#122c4066; backdrop-filter:blur(3px); }
+.dash-dialog-head h2 { margin:0 0 8px; font-size:20px; }
+.dash-dialog-head p { color:#7b8c99; font-size:12px; margin:0 0 20px; }
+#layoutSystemStatus { font-size:13px; color:#087f73; margin-bottom:12px; overflow-wrap:anywhere; }
+#layoutSystemData { max-height:48vh; overflow:auto; padding:16px; border:1px solid #e2eaed; border-radius:9px; background:#f5f8fa; font:12px/1.7 monospace; white-space:pre-wrap; overflow-wrap:anywhere; }
+.dash-dialog-actions { display:flex; justify-content:flex-end; margin-top:18px; }
+@media(max-width:560px) { .roomba-app .dash-actions { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); } }
+.dash-card { background:white; border:1px solid #dfe7eb; border-radius:13px; overflow:hidden; min-width:0; }
+.dash-card-head { padding:17px 20px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; border-bottom:1px solid #edf1f4; }
+.dash-heading { display:flex; align-items:center; gap:10px; }
+.dash-phase { font-size:11px; color:#358276; background:#ebf6f2; padding:3px 8px; border-radius:5px; }
+.dash-map-tools { display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+.dash-map-tools button { padding:5px 10px; font-size:12px; }
+.dash-switch { display:flex; align-items:center; gap:6px; font-size:11px; font-weight:400; margin:0 8px 0 0; color:#687d8b; }
+.dash-map-viewport { position:relative!important; height:clamp(350px,53vh,680px)!important; min-height:0!important; width:100%!important; max-width:100%!important; overflow:auto!important; overscroll-behavior:contain; background-color:#fcfdfd; background-image:radial-gradient(#dfe9eb .7px,transparent .7px); background-size:20px 20px; scrollbar-gutter:stable; touch-action:pan-x pan-y; }
+.dash-map-stage { position:relative; flex:none; }
+.dash-map-stage canvas { display:block; position:absolute!important; border:0!important; max-width:none!important; }
+.dash-map-viewport { touch-action:none; cursor:grab; user-select:none; }
+.dash-map-viewport.is-dragging { cursor:grabbing; }
+.dash-legend { display:flex; flex-wrap:wrap; gap:15px; padding:11px 20px; border-top:1px solid #edf1f4; align-items:center; color:#81929d; font-size:11px; }
+.dash-line { display:inline-block; width:18px; border-top:2px solid #314754; margin-right:5px; vertical-align:middle; }
+.dash-line-orange { border-top:2px dashed #db6b00; }
+.dash-map-status { margin-left:auto; color:#728792; }
+.dash-playback { padding:14px 20px; border-top:1px solid #edf1f4; background:#fbfcfd; }
+.dash-playback-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.dash-playback-row button { padding:6px 10px; font-size:12px; }
+.dash-playback-row select { width:68px; padding:6px; font-size:12px; }
+.dash-seek { flex:1; min-width:90px; display:flex; align-items:center; }
+.dash-playback-meta { font-size:11px; color:#8395a0; margin-top:8px; }
+.dash-record-hint { margin:12px 2px 0; color:#8b9ba6; font-size:11px; }
+.dash-tabs { display:flex; border-bottom:1px solid #e7edf1; padding:0 12px; gap:7px; }
+.roomba-app .dash-tabs button { border:0; border-radius:0; padding:16px 14px 13px; border-bottom:2px solid transparent; font-size:13px; color:#80909c; background:none; }
+.roomba-app .dash-tabs button[aria-selected=true] { color:#087f73; border-bottom-color:#087f73; font-weight:650; }
+.dash-pane { padding:19px 20px; }
+.dash-pane[hidden] { display:none!important; }
+.dash-section + .dash-section { border-top:1px solid #edf1f3; padding-top:18px; margin-top:19px; }
+.dash-button-row { display:flex; gap:7px; flex-wrap:wrap; align-items:center; }
+.dash-small { font-size:11px; color:#8395a1; line-height:1.7; overflow-wrap:anywhere; margin-top:8px; }
+.dash-small:empty { margin:0; }
+.dash-pair { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.dash-pair .dash-field { margin-bottom:12px; }
+.dash-side-details { border-top:1px solid #edf1f3; margin-top:18px; padding-top:16px; }
+.dash-side-details summary { cursor:pointer; font-size:12px; font-weight:600; color:#587181; padding:3px 0; margin-bottom:10px; }
+.dash-history-list { max-height:220px!important; overflow:auto!important; margin:12px 0; border:1px solid #e6edef; border-radius:7px; padding:2px 10px; }
+.dash-history-list label { display:flex!important; align-items:flex-start; gap:8px; padding:10px 0; margin:0; font-size:11px; font-weight:400; color:#586e7d; border-bottom:1px solid #eef2f4; overflow-wrap:anywhere; }
+.dash-history-list label:last-child { border:0; }
+.dash-history-list input { flex:none; margin-top:1px!important; }
+.dash-note-status { display:block; color:#69897e; font-size:11px; margin-top:9px; overflow-wrap:anywhere; }
+.dash-raw { font-size:12px; line-height:1.95; color:#6e8390; overflow-wrap:anywhere; }
+.dash-raw #apiresponse { white-space:pre-wrap; max-height:200px; overflow:auto; font:11px/1.7 monospace; background:#f4f7f9; border-radius:6px; padding:8px; }
+.roomba-app a[aria-disabled=true] { pointer-events:none; opacity:.45; }
+@media(max-width:1100px) { .roomba-app { padding:20px; } .dash-grid { grid-template-columns:minmax(0,1fr); } .dash-sidebar { width:100%; } .dash-pane { max-width:none; } .dash-toolbar { align-items:stretch; flex-wrap:wrap; gap:15px; } .dash-task-select { max-width:none; flex-basis:100%; } .dash-map-viewport { height:clamp(340px,58vh,620px)!important; } }
+@media(max-width:560px) { .roomba-app { padding:15px 12px 28px; } .dash-header { margin-bottom:16px; align-items:start; } .roomba-app h1 { font-size:22px; } .dash-logo { width:39px; height:39px; border-radius:11px; } .dash-brand { gap:9px; } .dash-connection { font-size:10px; padding:6px 8px; gap:6px; } .dash-eyebrow { font-size:9px; } .dash-toolbar { padding:14px; margin-bottom:14px; } .dash-actions { gap:6px; width:100%; } .dash-actions button { flex:1 1 0; padding:9px 4px; font-size:12px; min-width:0; white-space:nowrap; } .dash-stats { grid-template-columns:1fr 1fr; gap:9px; margin-bottom:14px; } .dash-stat { padding:12px 14px; } .dash-stat-value { font-size:23px; } .dash-card-head { padding:13px 14px; } .dash-map-tools { gap:5px; } .dash-map-tools .dash-switch { flex-basis:100%; margin-bottom:3px; } .dash-map-viewport { height:clamp(300px,49vh,480px)!important; } .dash-legend { padding:10px 14px; gap:10px; } .dash-map-status { width:100%; margin:0; } .dash-playback { padding:12px 14px; } .dash-playback-row { gap:6px; } .dash-seek { order:5; flex-basis:100%; margin-top:6px; } .dash-pane { padding:17px 16px; } }

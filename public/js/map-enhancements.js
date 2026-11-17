@@ -1,4 +1,4 @@
-/* global $:true RoombaReplay:true RoombaTrajectory:true canDelete:true clearMap:true deleteSelectedMission:true deleting:true downloadCanvas:true generation:true getValue:true hiddenThrough:true latestState:true listAt:true listGeneration:true listRequest:true mapping:true missionId:true pathLayer:true points:true pollTimer:true refreshMissionList:true renderMap:true request:true resetDisplayedMission:true restartLoop:true robotBodyLayer:true saveLegacyValues:true saveValues:true selectedMission:true sizeX:true sizeY:true startApp:true startMissionLoop:true text:true textLayer:true toggleMapping:true updateDeleteButton:true updateEvery:true updateRecordingStatus:true updateState:true validPosition:true xOffset:true yOffset:true */
+/* global $:true RoombaReplay:true RoombaTrajectory:true dashboard:true deleting:true getValue:true latestState:true listAt:true listGeneration:true listRequest:true missionId:true pathLayer:true points:true previewDashboardInit:true previewDashboardMapLayout:true previewLayoutConnection:true previewLayoutData:true previewLayoutState:true refreshMissionList:true renderMap:true resetDisplayedMission:true restartLoop:true robotBodyLayer:true saveLegacyValues:true selectedMission:true sizeX:true sizeY:true startApp:true textLayer:true updateDeleteButton:true updateEvery:true updateState:true validPosition:true xOffset:true yOffset:true */
 /* eslint-env browser */
 /* eslint no-unused-vars: "off", no-global-assign: "off", no-native-reassign: "off" */
 /* global $ sizeX sizeY xOffset yOffset updateEvery RoombaReplay */
@@ -528,10 +528,3 @@ function previewMapLayout () {
     container.style.cssText = 'position:relative;width:100%;max-width:100%;overflow:auto;height:' + (pathLayer.height + 22) + 'px';
   }
 }
-
-function previewDashboardInit () {}
-function previewLayoutConnection () {}
-function previewLayoutState () {}
-function previewLayoutPosition () {}
-function previewLayoutData () {}
-function previewDashboardMapLayout () { return false; }

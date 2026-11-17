@@ -1,4 +1,5 @@
 <% include header.ejs %>
+<% if (historyEnabled) { %><link rel="stylesheet" href="/css/map-dashboard.css"><% } %>
 <script type="text/javascript">
 
 var xOffset = <%=mapvalues.offsetX%>;
@@ -57,6 +58,7 @@ var firmwareVersion = <%=firmwareVersion%>;
 <script src="/js/map-replay.js"></script>
 <script src="/js/map-trajectory.js"></script>
 <script src="/js/map-enhancements.js"></script>
+<script src="/js/map-dashboard.js"></script>
 <% } %>
 <script src="/js/<%=historyEnabled ? 'map-history' : 'map'%>.js"></script>
 

@@ -84,7 +84,7 @@ function browser () {
   };
   context.window = context;
   vm.createContext(context);
-  vm.runInContext(['map-history', 'map-replay', 'map-trajectory', 'map-enhancements'].map(name => fs.readFileSync(path.join(__dirname, '../public/js', name + '.js'), 'utf8')).join('\n'), context);
+  vm.runInContext(['map-history', 'map-replay', 'map-trajectory', 'map-enhancements', 'map-dashboard'].map(name => fs.readFileSync(path.join(__dirname, '../public/js', name + '.js'), 'utf8')).join('\n'), context);
   return { context,
     elements,
     requests,
@@ -142,6 +142,93 @@ test('saving reads current field edits even before change fires and bounds canva
   assert.equal(saved.offsetX, 0); assert.equal(saved.offsetY, -120);
   assert.equal(saved.pointIntervalMs, 500);
   assert.equal(page.elements.path_layer.width, 4096);
+});
+
+test('large canvases fit a narrow viewport and zoom creates an internal scrollable stage', () => {
+  const page = browser();
+  const fit = page.context.previewFitSize(4096, 4096, 334, 414, 1);
+  assert.equal(fit.width, 334); assert.equal(fit.height, 334);
+  assert.equal(fit.stageWidth, 334); assert.equal(fit.stageHeight, 414);
+  assert.equal(fit.left, 0); assert.equal(fit.top, 40);
+  const zoomed = page.context.previewFitSize(4096, 4096, 334, 399, 2.25);
+  assert.ok(zoomed.stageWidth > 334); assert.ok(zoomed.stageHeight > 399);
+  assert.equal(zoomed.left, 0); assert.equal(zoomed.top, 0);
+});
+
+test('position/state cards follow recorded playback without inventing coordinates or live state', () => {
+  const page = browser(); page.bootstrap(['replay']);
+  for (const id of ['layoutX', 'layoutY', 'layoutPositionMeta', 'layoutState', 'layoutStateLabel', 'layoutStateMeta']) {
+    page.elements[id] = { textContent: '' };
+  }
+  page.last('/api/local/history/points').resolve(data());
+  assert.equal(page.elements.layoutX.textContent, 'X 30');
+  page.elements.previewSeek.value = '500'; page.elements.previewSeek.events.input.call(page.elements.previewSeek);
+  assert.equal(page.elements.layoutX.textContent, 'X 10');
+  assert.equal(page.elements.layoutY.textContent, 'Y 5');
+  assert.match(page.elements.layoutPositionMeta.textContent, /Playback/);
+  assert.equal(page.elements.layoutStateLabel.textContent, 'Playback status');
+  assert.equal(page.elements.layoutState.textContent, 'Cleaning');
+  assert.doesNotMatch(page.elements.layoutStateMeta.textContent, /Waiting/);
+  page.context.previewLayoutPosition(null, null);
+  assert.equal(page.elements.layoutX.textContent, 'X —');
+  page.context.selectedMission = 'm1-1000'; page.context.previewLayoutState({}, null, {});
+  assert.equal(page.elements.layoutStateLabel.textContent, 'Mission status');
+  assert.equal(page.elements.layoutState.textContent, 'No state available');
+});
+
+test('system dialog reads only the info endpoint, avoids overlapping requests and releases after errors', () => {
+  const page = browser(); page.bootstrap(['status']);
+  const dialog = { open: false, showModal () { this.open = true; } };
+  page.elements.layoutSystemDialog = dialog;
+  page.elements.layoutSystemStatus = { textContent: '' }; page.elements.layoutSystemData = { textContent: '' };
+  page.context.previewTestSystem(); const request = page.last('/api/local/info/sys');
+  assert.ok(request); assert.equal(request.options.type, undefined);
+  const count = page.requests.length; page.context.previewTestSystem(); assert.equal(page.requests.length, count);
+  request.resolve({ text: '<img onerror=bad>' });
+  assert.equal(page.elements.layoutSystemData.textContent, '{\n  "text": "<img onerror=bad>"\n}');
+  page.context.previewTestSystem(); page.last('/api/local/info/sys').reject(503, 'offline');
+  assert.match(page.elements.layoutSystemStatus.textContent, /offline/);
+  assert.equal(page.context.dashboard.systemRequest, null);
+  assert.ok(!page.requests.some(request => /\/action\//.test(request.options.url)));
+});
+
+test('wheel and pointer gestures anchor zoom, pan, pinch, cancel and respect zoom bounds', () => {
+  const page = browser(); page.bootstrap(['replay']);
+  page.elements.layoutCompareLegend = {};
+  const events = {};
+  const stage = { style: {} };
+  const viewport = { clientWidth: 400,
+    clientHeight: 300,
+    clientLeft: 0,
+    clientTop: 0,
+    scrollLeft: 0,
+    scrollTop: 0,
+    classList: { toggle () {} },
+    getBoundingClientRect: () => ({ left: 0, top: 0 }),
+    setPointerCapture () {},
+    addEventListener (name, handler) { events[name] = handler; } };
+  Object.assign(page.context.dashboard, { ready: true, viewport, stage });
+  page.context.previewMapGestures(viewport);
+  let prevented = false;
+  events.wheel({ clientX: 200, clientY: 150, deltaY: -300, deltaMode: 0, preventDefault () { prevented = true; } });
+  assert.ok(prevented); assert.ok(page.context.dashboard.zoom > 1);
+  const oldScroll = viewport.scrollLeft;
+  events.pointerdown({ pointerId: 1, pointerType: 'mouse', button: 0, clientX: 200, clientY: 150 });
+  events.pointermove({ pointerId: 1, clientX: 170, clientY: 120 });
+  assert.equal(viewport.scrollLeft, oldScroll + 30);
+  events.pointerup({ pointerId: 1 });
+  events.pointerdown({ pointerId: 2, pointerType: 'touch', clientX: 100, clientY: 150 });
+  events.pointerdown({ pointerId: 3, pointerType: 'touch', clientX: 200, clientY: 150 });
+  const beforePinch = page.context.dashboard.zoom;
+  events.pointermove({ pointerId: 3, clientX: 300, clientY: 150 });
+  assert.equal(page.context.dashboard.zoom, beforePinch * 2);
+  events.pointercancel({ pointerId: 3 });
+  const afterCancel = viewport.scrollLeft;
+  events.pointermove({ pointerId: 2, clientX: 80, clientY: 150 });
+  assert.equal(viewport.scrollLeft, afterCancel + 20);
+  events.lostpointercapture({ pointerId: 2 });
+  page.context.previewMapZoom(100); assert.equal(page.context.dashboard.zoom, 6);
+  page.context.previewMapZoom(0.01); assert.equal(page.context.dashboard.zoom, 1);
 });
 
 test('bootstrap failure retains basic history display and does not silently save settings to the container', () => {
