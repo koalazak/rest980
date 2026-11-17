@@ -20,7 +20,18 @@ function browser (script, firmwareVersion = 2) {
       }) };
   }
   const elements = {
-    historyAutoFit: { checked: true }, path_layer: canvas(), robot_body_layer: canvas(), text_layer: canvas()
+    historyAutoFit: { checked: true },
+    path_layer: canvas(),
+    robot_body_layer: canvas(),
+    text_layer: canvas(),
+    historyDelete: { disabled: true },
+    historyMission: {
+      value: 'latest',
+      options: [{ value: 'latest' }],
+      disabled: false,
+      remove (index) { this.options.splice(index, 1); },
+      appendChild (option) { this.options.push(option); }
+    }
   };
   const jquery = selector => ({
     text (value) { text[selector] = value; return this; },
@@ -38,16 +49,16 @@ function browser (script, firmwareVersion = 2) {
       fail (fn) { fail.push(fn); return this; },
       always (fn) { always.push(fn); return this; },
       resolve (data) { done.forEach(fn => fn(data)); always.forEach(fn => fn()); },
-      reject () { fail.forEach(fn => fn({ status: 503 }, 'error')); always.forEach(fn => fn()); },
+      reject (status = 503) { fail.forEach(fn => fn({ status }, 'error')); always.forEach(fn => fn()); },
       abort () { fail.forEach(fn => fn({ status: 0 }, 'abort')); always.forEach(fn => fn()); }
     };
     requests.push(request);
     return request;
   };
   const context = {
-    window: {},
+    window: { confirm: () => true },
     $: jquery,
-    document: { getElementById: id => elements[id], querySelector: () => null },
+    document: { getElementById: id => elements[id], querySelector: () => null, createElement: () => ({}) },
     sizeX: 800,
     sizeY: 800,
     xOffset: 0,
@@ -105,7 +116,7 @@ function historyData (id, count, start = 0) {
   for (let index = start; index < count; index++) {
     points.push({ seq: index + 1, x: index * 10, y: index * 5, theta: 90, break: index === 0 });
   }
-  return { id, total: count, reset: start === 0, points, online: true, state: {} };
+  return { id, total: count, reset: start === 0, points, online: true, deletable: true, state: {} };
 }
 
 test('history restores on reopen, appends deltas and keeps the display after errors', () => {
@@ -158,4 +169,62 @@ test('history discards stale requests after switching missions and pauses only d
   page.context.toggleMapping();
   assert.equal(page.context.mapping, true);
   assert.equal(page.pointsRequests()[before].options.data.after, 2);
+});
+
+test('deleting a mission clears the map and ignores stale list and point responses', () => {
+  const page = browser('map-history.js');
+  page.context.listAt = Date.now();
+  page.context.startMissionLoop();
+  page.pointsRequests()[0].resolve(historyData('m2-1234', 3));
+  page.context.startMissionLoop();
+  const oldList = page.requests.find(request => request.options.url === '/api/local/history');
+  const oldPoints = page.pointsRequests()[1];
+  page.context.deleteSelectedMission();
+  const removal = page.requests.find(request => request.options.type === 'DELETE');
+  assert.equal(removal.options.url, '/api/local/history/m2-1234');
+  assert.equal(page.elements.historyMission.disabled, true);
+  removal.resolve({ deleted: 'm2-1234', currentId: null });
+  oldList.resolve({ missions: [{ id: 'm2-1234', nMssn: 2 }] });
+  oldPoints.resolve(historyData('m2-1234', 4, 3));
+  assert.equal(page.context.points.length, 0);
+  assert.equal(page.context.selectedMission, 'latest');
+  assert.equal(page.elements.historyMission.options.length, 1);
+  assert.equal(page.elements.historyMission.disabled, false);
+  assert.equal(page.elements.historyDelete.disabled, true);
+});
+
+test('cancelled, forbidden and failed deletions preserve the displayed map', () => {
+  const page = browser('map-history.js');
+  page.context.listAt = Date.now();
+  page.context.startMissionLoop();
+  page.pointsRequests()[0].resolve(historyData('m2-1234', 3));
+  const before = page.requests.length;
+  page.context.window.confirm = () => false;
+  page.context.deleteSelectedMission();
+  assert.equal(page.requests.length, before);
+  assert.equal(page.context.points.length, 3);
+  page.context.window.confirm = () => true;
+  page.context.deleteSelectedMission();
+  const removal = page.requests.find(request => request.options.type === 'DELETE');
+  removal.reject(409);
+  assert.equal(page.context.points.length, 3);
+  assert.equal(page.context.missionId, 'm2-1234');
+  assert.equal(page.elements.historyDelete.disabled, true);
+  assert.match(page.text['#mapStatus'], /Finish the current mission/);
+  page.pointsRequests()[page.pointsRequests().length - 1].resolve(historyData('m2-1234', 3, 3));
+  page.context.deleteSelectedMission();
+  page.requests.filter(request => request.options.type === 'DELETE')[1].reject(503);
+  assert.equal(page.context.points.length, 3);
+  assert.match(page.text['#mapStatus'], /Deletion failed/);
+});
+
+test('a mission removed in another browser returns to latest without stopping polling', () => {
+  const page = browser('map-history.js');
+  page.context.listAt = Date.now();
+  page.context.selectedMission = 'm2-1234';
+  page.context.startMissionLoop();
+  page.pointsRequests()[0].reject(404);
+  assert.equal(page.context.selectedMission, 'latest');
+  assert.equal(page.context.missionId, null);
+  assert.equal(page.timers.size, 1);
 });

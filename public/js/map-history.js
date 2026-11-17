@@ -14,6 +14,10 @@ var request = null;
 var pollTimer = null;
 var generation = 0;
 var listAt = 0;
+var listRequest = null;
+var listGeneration = 0;
+var deleting = false;
+var canDelete = false;
 
 function startApp () {
   pathLayer = document.getElementById('path_layer');
@@ -31,6 +35,7 @@ function startApp () {
   var controls = document.createElement('div');
   controls.style.cssText = 'display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:8px 0';
   controls.innerHTML = '<label>Mission: <select id="historyMission"><option value="latest">Latest mission (live)</option></select></label>' +
+    '<button type="button" class="btn btn-danger" id="historyDelete" disabled>Delete selected mission</button>' +
     '<label><input type="checkbox" id="historyAutoFit" checked> Fit to trajectory</label>' +
     '<span id="historyInfo">Loading recorded trajectory...</span>';
   document.getElementById('apiresponse').parentNode.insertAdjacentElement('afterend', controls);
@@ -38,9 +43,14 @@ function startApp () {
     selectedMission = this.value;
     missionId = null;
     points = [];
+    latestState = {};
     hiddenThrough = 0;
+    canDelete = false;
+    updateDeleteButton();
+    renderMap();
     restartLoop();
   });
+  document.getElementById('historyDelete').addEventListener('click', deleteSelectedMission);
   document.getElementById('historyAutoFit').addEventListener('change', renderMap);
   var toggle = document.querySelector('button[onclick="toggleMapping();"]');
   if (toggle) toggle.textContent = 'Pause display';
@@ -51,8 +61,13 @@ function startApp () {
 
 function refreshMissionList () {
   listAt = Date.now();
-  $.ajax({ url: '/api/local/history', dataType: 'json', cache: false, timeout: 10000 })
+  var token = ++listGeneration;
+  if (listRequest) listRequest.abort();
+  var pending = $.ajax({ url: '/api/local/history', dataType: 'json', cache: false, timeout: 10000 });
+  listRequest = pending;
+  pending
     .done(function (data) {
+      if (token !== listGeneration || deleting) return;
       var select = document.getElementById('historyMission');
       if (!select || !Array.isArray(data.missions)) return;
       while (select.options.length > 1) select.remove(1);
@@ -64,6 +79,62 @@ function refreshMissionList () {
         select.appendChild(option);
       });
       select.value = selectedMission;
+    })
+    .always(function () {
+      if (listRequest === pending) listRequest = null;
+    });
+}
+
+function updateDeleteButton () {
+  var button = document.getElementById('historyDelete');
+  if (!button) return;
+  button.disabled = deleting || !missionId || !canDelete;
+  button.title = canDelete ? 'Delete the recorded map for this mission' : 'Finish the current mission or load a saved map first';
+}
+
+function resetDisplayedMission () {
+  selectedMission = 'latest';
+  missionId = null;
+  points = [];
+  latestState = {};
+  hiddenThrough = 0;
+  canDelete = false;
+  listAt = 0;
+  var select = document.getElementById('historyMission');
+  if (select) select.value = 'latest';
+  updateDeleteButton();
+  updateState({}, null);
+  renderMap();
+}
+
+function deleteSelectedMission () {
+  if (deleting || !missionId || !canDelete) return;
+  var id = missionId;
+  var number = (latestState.cleanMissionStatus || {}).nMssn;
+  if (!window.confirm('Delete mission ' + (number == null ? id : number) + ' map?\nThis permanently deletes its recorded trajectory.')) return;
+  deleting = true;
+  updateDeleteButton();
+  var select = document.getElementById('historyMission');
+  if (select) select.disabled = true;
+  listGeneration++;
+  if (listRequest) listRequest.abort();
+  restartLoop();
+  $.ajax({ url: '/api/local/history/' + encodeURIComponent(id), type: 'DELETE', dataType: 'json', timeout: 10000 })
+    .done(function () {
+      resetDisplayedMission();
+      $('#mapStatus').text('Mission map deleted');
+    })
+    .fail(function (xhr) {
+      if (xhr.status === 409) canDelete = false;
+      $('#mapStatus').text(xhr.status === 409 ? 'Finish the current mission before deleting its map'
+        : 'Deletion failed: ' + (xhr.responseJSON && xhr.responseJSON.error || 'Check the history service and retry'));
+    })
+    .always(function () {
+      deleting = false;
+      if (select) select.disabled = false;
+      updateDeleteButton();
+      refreshMissionList();
+      restartLoop();
     });
 }
 
@@ -77,7 +148,7 @@ function restartLoop () {
 }
 
 function startMissionLoop () {
-  if (!mapping || request) return;
+  if (!mapping || request || deleting) return;
   if (Date.now() - listAt > 15000) refreshMissionList();
   var token = generation;
   var pending = $.ajax({
@@ -98,6 +169,8 @@ function startMissionLoop () {
       points = [];
     }
     missionId = data.id;
+    canDelete = Boolean(data.deletable);
+    updateDeleteButton();
     if (Array.isArray(data.points)) points = points.concat(data.points);
     latestState = data.state || {};
     updateState(latestState, data.lastSeen || data.updatedAt);
@@ -108,6 +181,11 @@ function startMissionLoop () {
   });
   pending.fail(function (xhr, status) {
     if (token !== generation || status === 'abort') return;
+    if (xhr.status === 404 && selectedMission !== 'latest') {
+      resetDisplayedMission();
+      $('#mapStatus').text('Mission no longer exists; refreshing the list');
+      return;
+    }
     $('#mapStatus').text(xhr.status === 404
       ? 'History endpoint not found; check server configuration'
       : 'History request failed; retrying without clearing the display');

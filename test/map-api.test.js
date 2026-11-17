@@ -26,14 +26,15 @@ function load (relative, overrides) {
   return module.exports;
 }
 
-function request (server, url, authorized = true) {
+function request (server, url, authorized = true, method = 'GET') {
   return new Promise((resolve, reject) => {
     const headers = authorized ? { Authorization: 'Basic ' + Buffer.from('test:map-test').toString('base64') } : {};
-    http.get({ host: '127.0.0.1', port: server.address().port, path: url, headers }, response => {
+    const outgoing = http.request({ host: '127.0.0.1', port: server.address().port, path: url, headers, method }, response => {
       let body = '';
       response.on('data', data => { body += data; });
       response.on('end', () => resolve({ status: response.statusCode, body, headers: response.headers }));
     }).on('error', reject);
+    outgoing.end();
   });
 }
 
@@ -42,6 +43,7 @@ test('history shares existing authentication and connection; action and map rout
   let client;
   let recorder;
   let connections = 0;
+  let missionId;
   const config = {
     blid: 'test-robot',
     password: 'test-password',
@@ -90,6 +92,7 @@ test('history shares existing authentication and connection; action and map rout
       assert.equal(response.status, 200);
       assert.equal(response.headers['cache-control'], 'no-store');
       assert.equal(JSON.parse(response.body).total, 1);
+      missionId = JSON.parse(response.body).id;
       assert.ok(!response.body.includes('test-password'));
       return request(server, '/api/local/history/points?after=invalid');
     })
@@ -105,6 +108,33 @@ test('history shares existing authentication and connection; action and map rout
     .then(response => {
       assert.equal(response.status, 200);
       assert.match(response.body, /\/js\/map-history\.js/);
+      assert.equal(connections, 1);
+      return request(server, '/api/local/history/' + missionId, false, 'DELETE');
+    })
+    .then(response => {
+      assert.equal(response.status, 401);
+      return request(server, '/api/local/history/latest', true, 'DELETE');
+    })
+    .then(response => {
+      assert.equal(response.status, 400, 'an alias cannot delete a task');
+      return request(server, '/api/local/history/' + missionId, true, 'DELETE');
+    })
+    .then(response => {
+      assert.equal(response.status, 409, 'an active task cannot be deleted');
+      client.emit('state', { cleanMissionStatus: { nMssn: 1, cycle: 'none', phase: 'charge' }, pose: { theta: 0, point: { x: 10, y: 20 } } });
+      return request(server, '/api/local/history/' + missionId, true, 'DELETE');
+    })
+    .then(response => {
+      assert.equal(response.status, 200, 'flush pending completion state before deciding');
+      assert.equal(JSON.parse(response.body).deleted, missionId);
+      return request(server, '/api/local/history/points?mission=' + missionId);
+    })
+    .then(response => {
+      assert.equal(response.status, 404);
+      return request(server, '/api/local/history');
+    })
+    .then(response => {
+      assert.deepEqual(JSON.parse(response.body).missions, []);
       assert.equal(connections, 1);
     })
     .then(cleanup, error => { cleanup(); throw error; });

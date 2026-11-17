@@ -115,20 +115,27 @@ to the trajectory, and export the displayed image. **Pause display** and
 **Clear display** affect only the browser; they do not stop recording or delete
 history. Start/Pause/Resume/Dock/Stop remain robot commands.
 
+Select a recorded mission and choose **Delete selected mission** to permanently
+remove its saved trajectory after confirmation. An active mission, including a
+mid-mission recharge, cannot be deleted until it finishes. Deleting the most
+recent completed mission switches to the previous saved mission. Deleted maps
+remain deleted across reloads and restarts.
+
 Only received positions can be recorded: earlier trajectories and server or
 robot disconnection gaps cannot be recovered. Reconnection starts a new line
 segment instead of drawing a line across missing data. The robot must report a
 valid `pose`; this is a trajectory display, not room segmentation or a floor plan.
 
 History consists of per-mission JSON metadata and append-only JSONL coordinates,
-plus a `current.json` pointer. Back up the entire directory. History is not
-automatically deleted; stop rest980 before manually archiving/removing files and
-keep the mission referenced by `current.json`. The recorder stores only mapping
+plus a `current.json` pointer. A small `.deleted` marker records deletion intent
+so interrupted cleanup cannot resurrect a deleted map. Back up the entire
+directory. History is not automatically deleted; use the page's delete button
+to remove individual recordings. The recorder stores only mapping
 state, not robot passwords or Wi-Fi configuration. Write failures are reported
 without stopping robot controls; abrupt power loss or disk failure can still
 lose recent data.
 
-Two read-only endpoints use the existing API authentication:
+History endpoints use the existing API authentication:
 
 - `GET /api/local/history`: mission summaries, latest mission ID and connection status.
 - `GET /api/local/history/points?mission=latest`: full trajectory and display state.
@@ -136,6 +143,9 @@ Two read-only endpoints use the existing API authentication:
   to request only points after a previously received count. A changed mission
   returns the full trajectory with `reset: true`. Invalid IDs/cursors return 400;
   unknown missions return 404. Disabled/unavailable history returns 503.
+- `DELETE /api/local/history/<id>`: permanently delete one saved trajectory.
+  An explicit mission ID is required; the `latest` alias is rejected. Active
+  missions return 409. Repeating a successful exact-ID deletion is safe.
 
 History is opt-in and inherits the same exposure as the existing API. Use
 `basicAuthUser`/`basicAuthPass` and appropriate network access controls when needed.
