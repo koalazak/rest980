@@ -13,3 +13,7 @@ GET `/api/local/history/enhancements/retention` reads policy/status. POST `reten
 ## Mission notes, exports and trajectory analysis
 
 Authenticated GET/POST `/api/local/history/enhancements/notes/:id` reads/saves a title and note with optimistic `revision` checking. Notes live in `notes/` and are removed with their mission. GET `/api/local/history/enhancements/export?mission=<explicit-id>&format=json|csv` exports whitelisted trajectory/annotation fields, never arbitrary robot configuration. CSV text is escaped to prevent spreadsheet formula evaluation. Statistics use uncalibrated coordinate units and skip segment breaks and long gaps; they do not measure cleaning coverage. Comparison overlays may be offset when missions use different position origins.
+
+## Timestamp playback and mission library controls
+
+The history map now restores server display preferences and provides timestamp-based playback, speed/seek controls, mission titles/notes, text/date/status filters, comparison snapshots, PNG/JSON/CSV exports and confirmed cleanup controls. Playback never changes the recording cursor. Battery/area remain mission summaries, not fabricated per-frame samples. Draft edits survive polling and switching missions within the current page; unsaved drafts do not survive reloads.

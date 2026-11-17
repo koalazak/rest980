@@ -105,6 +105,16 @@ test('history shares existing authentication and connection; action and map rout
       }
       assert.equal(client.listenerCount('state'), 1);
 
+      const note = await request(server, '/api/local/history/enhancements/notes/' + missionId, true, 'POST', { title: 'Living room', note: 'Around the sofa', revision: null });
+      assert.equal(note.status, 200);
+      assert.equal((await request(server, '/api/local/history/enhancements/notes/' + missionId, true, 'POST', { title: 'stale', note: '', revision: null })).status, 409);
+      const exported = await request(server, '/api/local/history/enhancements/export?mission=' + missionId + '&format=json');
+      assert.equal(exported.status, 200); assert.equal(JSON.parse(exported.body).mission.title, 'Living room');
+      assert.ok(!exported.body.includes('test-password')); assert.match(exported.headers['content-disposition'], /attachment/);
+      const csv = await request(server, '/api/local/history/enhancements/export?mission=' + missionId + '&format=csv');
+      assert.equal(csv.status, 200); assert.match(csv.headers['content-type'], /^text\/csv/);
+      assert.equal((await request(server, '/api/local/history/enhancements/retention/plan', true, 'POST', { ids: [missionId] })).status, 409);
+
       assert.ok(!response.body.includes('test-password'));
       return request(server, '/api/local/history/points?after=invalid');
     })

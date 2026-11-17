@@ -1,8 +1,9 @@
-/* global $ sizeX sizeY xOffset yOffset updateEvery */
+/* global $:true RoombaReplay:true RoombaTrajectory:true enhancement:true previewCleanup:true previewClearComparison:true previewCompareOptions:true previewComparisonPoints:true previewDashboardInit:true previewDashboardMapLayout:true previewDisplayState:true previewDrawComparison:true previewElement:true previewError:true previewExtrasInit:true previewExtrasReset:true previewExtrasUpdate:true previewFillNote:true previewForgetMissions:true previewFrame:true previewHas:true previewInit:true previewJSON:true previewLayoutConnection:true previewLayoutData:true previewLayoutPosition:true previewLayoutState:true previewLoadComparison:true previewLoadHistory:true previewMapLayout:true previewMessage:true previewMissionLabel:true previewMissionList:true previewNoteRequestEpoch:true previewRenderReplay:true previewReplayControls:true previewReset:true previewRetentionInit:true previewRetentionValues:true previewSaveNote:true previewSaveValues:true previewStartApp:true previewStatus:true previewText:true previewUpdate:true previewUpdateExports:true sizeX:true sizeY:true updateEvery:true xOffset:true yOffset:true */
 /* eslint-env browser */
 /* eslint no-unused-vars: "off", no-global-assign: "off", no-native-reassign: "off" */
-// Coordinates are recorded by the server, independently of this page.
-window.onload = startApp;
+/* global $ sizeX sizeY xOffset yOffset updateEvery */
+// Positions are recorded by the server independently of the browser.
+window.onload = previewStartApp;
 var mapping = true;
 var pathLayer;
 var robotBodyLayer;
@@ -42,6 +43,7 @@ function startApp () {
     '<span id="historyInfo">Loading recorded trajectory...</span>';
   document.getElementById('apiresponse').parentNode.insertAdjacentElement('afterend', controls);
   document.getElementById('historyMission').addEventListener('change', function () {
+    previewReset();
     selectedMission = this.value;
     missionId = null;
     points = [];
@@ -73,13 +75,7 @@ function refreshMissionList () {
       var select = document.getElementById('historyMission');
       if (!select || !Array.isArray(data.missions)) return;
       while (select.options.length > 1) select.remove(1);
-      data.missions.forEach(function (mission) {
-        var option = document.createElement('option');
-        option.value = mission.id;
-        option.textContent = 'Mission ' + (mission.nMssn == null ? '?' : mission.nMssn) + ' · ' +
-          new Date(mission.createdAt).toLocaleString() + ' · ' + mission.count + ' points';
-        select.appendChild(option);
-      });
+      previewMissionList(data.missions, select, data.currentId);
       select.value = selectedMission;
     })
     .always(function () {
@@ -95,6 +91,7 @@ function updateDeleteButton () {
 }
 
 function resetDisplayedMission () {
+  previewReset();
   selectedMission = 'latest';
   missionId = null;
   points = [];
@@ -123,6 +120,7 @@ function deleteSelectedMission () {
   restartLoop();
   $.ajax({ url: '/api/local/history/' + encodeURIComponent(id), type: 'DELETE', dataType: 'json', timeout: 10000 })
     .done(function () {
+      previewForgetMissions([id]);
       resetDisplayedMission();
       $('#mapStatus').text('Mission map deleted');
     })
@@ -153,6 +151,7 @@ function startMissionLoop () {
   if (!mapping || request || deleting) return;
   if (Date.now() - listAt > 15000) refreshMissionList();
   var token = generation;
+  var annotationEpoch = previewNoteRequestEpoch();
   var pending = $.ajax({
     url: '/api/local/history/points',
     dataType: 'json',
@@ -165,6 +164,7 @@ function startMissionLoop () {
     if (token !== generation || !mapping) return;
     if (data.id !== missionId || data.reset) {
       if (data.id !== missionId) {
+        previewReset();
         hiddenThrough = 0;
         listAt = 0;
       }
@@ -175,7 +175,8 @@ function startMissionLoop () {
     updateDeleteButton();
     if (Array.isArray(data.points)) points = points.concat(data.points);
     latestState = data.state || {};
-    updateState(latestState, data.lastSeen || data.updatedAt);
+    previewUpdate(data, annotationEpoch);
+    previewDisplayState(data);
     renderMap();
     $('#historyInfo').text((missionId ? 'Server saved ' + data.total + ' points. ' : 'Waiting for a cleaning mission. ') +
       'Recording continues with this page closed; server downtime cannot be recovered.');
@@ -184,6 +185,7 @@ function startMissionLoop () {
   pending.fail(function (xhr, status) {
     if (token !== generation || status === 'abort') return;
     if (xhr.status === 404 && selectedMission !== 'latest') {
+      previewForgetMissions([missionId]);
       resetDisplayedMission();
       $('#mapStatus').text('Mission no longer exists; refreshing the list');
       return;
@@ -230,18 +232,22 @@ function validPosition (point) {
 
 function renderMap () {
   if (!pathLayer) return;
+  previewMapLayout();
   var pathContext = pathLayer.getContext('2d');
   var robotContext = robotBodyLayer.getContext('2d');
   var labelContext = textLayer.getContext('2d');
   [pathContext, robotContext, labelContext].forEach(function (context) {
     context.clearRect(0, 0, pathLayer.width, pathLayer.height);
   });
-  var visible = points.filter(function (point) { return point.seq > hiddenThrough && validPosition(point); });
-  var pose = latestState.pose;
+  var frame = previewFrame();
+  var visible = (frame ? frame.points : points).filter(function (point) { return point.seq > hiddenThrough && validPosition(point); });
+  var pose = frame ? null : latestState.pose;
   var current = pose && pose.point ? { x: pose.point.x, y: pose.point.y, theta: pose.theta } : null;
   if (!validPosition(current)) current = visible[visible.length - 1];
-  var bounds = visible.slice();
+  var bounds = (frame ? frame.bounds.filter(validPosition) : visible).slice();
+  previewLayoutPosition(current, frame);
   if (current) bounds.push(current);
+  bounds = bounds.concat(previewComparisonPoints());
   if (!bounds.length) return;
   var fit = document.getElementById('historyAutoFit');
   var minX = Infinity;
@@ -252,7 +258,7 @@ function renderMap () {
     minX = Math.min(minX, point.x); maxX = Math.max(maxX, point.x);
     minY = Math.min(minY, point.y); maxY = Math.max(maxY, point.y);
   });
-  var scale = Math.min(1, (pathLayer.width - 80) / Math.max(1, maxY - minY),
+  var scale = Math.min((pathLayer.width - 80) / Math.max(1, maxY - minY),
     (pathLayer.height - 80) / Math.max(1, maxX - minX));
   function screen (point) {
     if (fit && fit.checked) {
@@ -263,6 +269,7 @@ function renderMap () {
     }
     return { x: pathLayer.width - (point.y + Number(yOffset)), y: pathLayer.height - (point.x + Number(xOffset)) };
   }
+  previewDrawComparison(pathContext, screen);
   pathContext.beginPath();
   pathContext.lineWidth = 1.5;
   pathContext.strokeStyle = '#222';
@@ -290,7 +297,7 @@ function renderMap () {
     robotContext.stroke();
     labelContext.font = '12px sans-serif';
     labelContext.fillStyle = '#164d9a';
-    labelContext.fillText((latestState.cleanMissionStatus || {}).phase || '', position.x + 17, position.y);
+    labelContext.fillText((frame ? frame.current && frame.current.phase : (latestState.cleanMissionStatus || {}).phase) || '', position.x + 17, position.y);
   }
 }
 
@@ -326,7 +333,9 @@ function downloadCanvas () {
   link.download = (missionId || 'roomba') + '.png';
 }
 
-function saveValues () {
+function saveValues () { previewSaveValues(); }
+
+function saveLegacyValues () {
   $.post('/map/values', {
     offsetX: Number(xOffset),
     offsetY: Number(yOffset),
@@ -346,7 +355,7 @@ $('.metrics').on('change', function () {
 });
 
 $('#updateevery').on('change', function () {
-  updateEvery = Math.max(500, getValue('#updateevery', updateEvery));
+  updateEvery = Math.min(60000, Math.max(500, getValue('#updateevery', updateEvery)));
 });
 
 $('.action').on('click', function () {

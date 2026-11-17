@@ -8,7 +8,7 @@
     "pretest": "npm install",
     "check:style": "eslint .",
     "test": "npm run check:style && npm run test:map",
-    "test:map": "node --test test/map-api.test.js test/map-client.test.js test/map-delete.test.js test/map-enhancements.test.js test/map-history.test.js",
+    "test:map": "node --test test/map-api.test.js test/map-client.test.js test/map-delete.test.js test/map-enhancement-client.test.js test/map-enhancements.test.js test/map-history.test.js",
     "getpassword": "node ./node_modules/dorita980/bin/getpassword.js"
   },
   "repository": {

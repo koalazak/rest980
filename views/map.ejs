@@ -53,6 +53,11 @@ var firmwareVersion = <%=firmwareVersion%>;
   y: <span class='data' id='y'></span><br/>
 </div>
 
+<% if (historyEnabled) { %>
+<script src="/js/map-replay.js"></script>
+<script src="/js/map-trajectory.js"></script>
+<script src="/js/map-enhancements.js"></script>
+<% } %>
 <script src="/js/<%=historyEnabled ? 'map-history' : 'map'%>.js"></script>
 
 <% include footer.ejs %>

@@ -11,6 +11,7 @@ const settings = require(root + '/settings.js');
 const { Retention } = require(root + '/retention.js');
 const summary = require(root + '/summary.js');
 const statusModule = require(root + '/status.js');
+const Replay = require(path.resolve(__dirname, '../public/js/map-replay.js'));
 const { Notes } = require(root + '/library.js');
 const exporter = require(root + '/export.js');
 const trajectory = require(path.resolve(__dirname, '../public/js/map-trajectory.js'));
@@ -136,6 +137,27 @@ test('age cleanup uses last observation, handles corrupt policy safely and does 
   const first = 'm2-' + f.now();
   fs.writeFileSync(f.store.file(first, '.deleted'), '{}');
   f.store.ingest(state(2)); assert.equal(f.store.current.meta.id, first + '-1');
+});
+test('timestamp replay seeks by time, pauses, changes speed and resets on task changes', () => {
+  const replay = new Replay();
+  const points = [0, 1000, 9000, 10000].map((t, i) => ({ t: new Date(100000 + t).toISOString(),
+    seq: i + 1,
+    x: i,
+    y: i,
+    theta: 90,
+    break: i === 2 }));
+  replay.setPoints('one', points); replay.seek(0.5);
+  assert.equal(replay.frame().count, 2, 'half the time is not half the points');
+  assert.equal(replay.frame().bounds.length, 4, 'bounds use the whole task during playback');
+  replay.play(); replay.speed = 1; replay.tick(0); replay.tick(4000);
+  assert.equal(replay.frame().count, 3); assert.equal(replay.frame().current.break, true);
+  replay.pause(); const cursor = replay.position; replay.tick(100000); assert.equal(replay.position, cursor);
+  replay.speed = 20; replay.play(); replay.tick(100000); replay.tick(100100);
+  assert.equal(replay.frame().count, 4); assert.equal(replay.playing, false);
+  replay.setPoints('one', points.concat({ t: new Date(111000).toISOString(), seq: 5 }));
+  assert.equal(replay.live, false); assert.equal(replay.frame().count, 4, 'new live data does not move a paused seek position');
+  replay.setPoints('two', []); assert.equal(replay.live, true); assert.equal(replay.playing, false);
+  assert.equal(points.length, 4, 'playback never modifies original history');
 });
 test('task notes persist separately, reject stale edits and are removed along with a task', t => {
   const f = fixture(t);
