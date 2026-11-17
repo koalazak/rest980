@@ -4,7 +4,9 @@
 // Coordinates are recorded by the server, independently of this page.
 window.onload = startApp;
 var mapping = true;
-var pathLayer, robotBodyLayer, textLayer;
+var pathLayer;
+var robotBodyLayer;
+var textLayer;
 var points = [];
 var missionId = null;
 var selectedMission = 'latest';

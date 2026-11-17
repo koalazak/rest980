@@ -379,4 +379,4 @@ Video: Realtime cleaning map
 
 ### Map history enhancements
 
-See [map enhancement APIs and usage](docs/map-enhancements.md) for persistent display preferences and recorder diagnostics.
+See [map enhancement APIs and usage](docs/map-enhancements.md) for persistent display preferences and recorder diagnostics, confirmed batch deletion and opt-in retention.
